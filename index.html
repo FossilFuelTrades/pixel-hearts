@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#ffb3c6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Pixel Hearts">
+<title>Pixel Hearts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23ffe9f0'/><g fill='%23ff3d71'><rect x='3' y='3' width='4' height='2'/><rect x='9' y='3' width='4' height='2'/><rect x='2' y='5' width='12' height='3'/><rect x='3' y='8' width='10' height='2'/><rect x='5' y='10' width='6' height='2'/><rect x='7' y='12' width='2' height='1'/></g></svg>">
+
+<style>
+:root{
+  --pink:#ff3d71; --pink-soft:#ff8fa3; --blush:#ffe3ea;
+  --purple:#7b4fb5; --lilac:#efe4ff;
+  --cream:#fff8f2; --card:#ffffff; --ink:#2b2320; --muted:#8a7a72;
+  --sunny:#ffd93d; --mint:#a8e6a1; --green:#2fa36b;
+  --line:#f0e2da;
+  --shadow:0 10px 30px rgba(120,70,60,.10), 0 2px 6px rgba(120,70,60,.06);
+  --shadow-lift:0 16px 40px rgba(120,70,60,.16);
+  --r:20px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Nunito',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, #ffe9f0 0%, transparent 60%),
+    radial-gradient(1000px 500px at 110% 10%, #eae4ff 0%, transparent 55%),
+    linear-gradient(180deg,#fff8f2 0%, #fff2e9 100%);
+  background-attachment:fixed;
+  min-height:100dvh;
+  overscroll-behavior-y:none;
+}
+.px{font-family:'Pixelify Sans','Nunito',monospace;letter-spacing:.5px}
+
+/* ---------- shell ---------- */
+#app{
+  max-width:460px;margin:0 auto;
+  padding:max(14px, env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));
+  min-height:100dvh;display:flex;flex-direction:column;
+}
+.screen{display:none;flex:1;flex-direction:column;animation:pop .28s cubic-bezier(.2,.9,.3,1.2)}
+.screen.active{display:flex}
+@keyframes pop{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
+
+header.top{display:flex;align-items:center;gap:10px;margin-bottom:14px;min-height:38px}
+header.top h1{font-size:22px;margin:0;flex:1;line-height:1.1}
+.iconbtn{
+  border:none;background:#fff;border-radius:14px;width:38px;height:38px;flex:0 0 38px;
+  font-size:17px;box-shadow:var(--shadow);cursor:pointer;display:grid;place-items:center;
+  transition:transform .12s;
+}
+.iconbtn:active{transform:scale(.9)}
+
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:18px}
+.card + .card{margin-top:14px}
+
+/* ---------- buttons ---------- */
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;border:none;border-radius:16px;padding:16px 18px;
+  font-family:'Pixelify Sans','Nunito',monospace;font-size:18px;letter-spacing:.5px;
+  cursor:pointer;transition:transform .12s ease, box-shadow .12s ease;
+  background:var(--pink);color:#fff;box-shadow:0 6px 0 #d61f52, var(--shadow);
+}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 #d61f52}
+.btn.ghost{background:#fff;color:var(--ink);box-shadow:0 6px 0 #f0e2da, var(--shadow)}
+.btn.ghost:active{box-shadow:0 2px 0 #f0e2da}
+.btn.purple{background:var(--purple);box-shadow:0 6px 0 #5b3a88, var(--shadow)}
+.btn.purple:active{box-shadow:0 2px 0 #5b3a88}
+.btn.green{background:var(--green);box-shadow:0 6px 0 #1f7a4e, var(--shadow)}
+.btn.green:active{box-shadow:0 2px 0 #1f7a4e}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.btn.sm{padding:11px 14px;font-size:15px;border-radius:13px}
+.row{display:flex;gap:10px}
+.row > *{flex:1}
+
+label.fld{display:block;margin-bottom:12px}
+label.fld span{display:block;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px}
+input[type=text]{
+  width:100%;border:2px solid var(--line);border-radius:14px;padding:13px 14px;
+  font-family:'Nunito',sans-serif;font-size:17px;font-weight:700;color:var(--ink);background:#fffdfb;outline:none;
+}
+input[type=text]:focus{border-color:var(--pink-soft);background:#fff}
+
+.hint{font-size:13px;color:var(--muted);line-height:1.5}
+.center{text-align:center}
+
+/* ---------- home ---------- */
+.hero{text-align:center;padding:6px 0 4px}
+.hero .logo{font-size:34px;line-height:1.05;margin:0 0 4px}
+.hero .sub{font-size:13px;color:var(--muted);font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:2px}
+.stat{background:var(--blush);border-radius:16px;padding:12px 8px;text-align:center}
+.stat.b{background:var(--lilac)} .stat.c{background:#fff4cf}
+.stat .n{font-family:'Pixelify Sans',monospace;font-size:26px;line-height:1}
+.stat .l{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-top:4px}
+
+.steps{list-style:none;margin:0;padding:0;counter-reset:s}
+.steps li{counter-increment:s;display:flex;gap:11px;align-items:flex-start;font-size:14px;line-height:1.45;margin-bottom:10px}
+.steps li:last-child{margin-bottom:0}
+.steps li::before{
+  content:counter(s);flex:0 0 24px;height:24px;border-radius:8px;background:var(--blush);
+  color:var(--pink);font-family:'Pixelify Sans',monospace;font-size:15px;display:grid;place-items:center;margin-top:1px;
+}
+
+/* ---------- word choice ---------- */
+.wordcard{
+  width:100%;text-align:left;border:none;cursor:pointer;background:#fff;
+  border-radius:18px;padding:16px 18px;box-shadow:var(--shadow);
+  display:flex;align-items:center;gap:14px;margin-bottom:12px;
+  transition:transform .14s, box-shadow .14s;
+  border-left:6px solid var(--pink-soft);
+}
+.wordcard:active{transform:scale(.975)}
+.wordcard .emo{font-size:26px;flex:0 0 auto}
+.wordcard .txt{display:flex;flex-direction:column;min-width:0}
+.wordcard .w{display:block;font-family:'Pixelify Sans',monospace;font-size:23px;line-height:1.15}
+.wordcard .c{display:block;font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-top:3px}
+
+/* ---------- canvas ---------- */
+.canvaswrap{
+  position:relative;width:100%;aspect-ratio:1/1;border-radius:18px;overflow:hidden;
+  box-shadow:var(--shadow-lift);touch-action:none;user-select:none;
+  background:
+    repeating-conic-gradient(#faf2ec 0% 25%, #fffcf9 0% 50%) 0 0 / calc(100%/8) calc(100%/8);
+}
+.canvaswrap canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+.gridlines{
+  position:absolute;inset:0;pointer-events:none;
+  background-image:
+    linear-gradient(to right,  rgba(120,90,80,.17) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(120,90,80,.17) 1px, transparent 1px);
+  background-size:calc(100%/16) 100%, 100% calc(100%/16);
+}
+.gridlines.off{display:none}
+
+.toolbar{display:flex;gap:8px;margin-top:12px}
+.tool{
+  flex:1;border:none;background:#fff;border-radius:14px;padding:11px 0;font-size:19px;
+  box-shadow:var(--shadow);cursor:pointer;transition:transform .12s, background .12s;
+}
+.tool:active{transform:scale(.92)}
+.tool.on{background:var(--ink);color:#fff}
+
+.palette{display:grid;grid-template-columns:repeat(8,1fr);gap:7px;margin-top:10px}
+.sw{
+  aspect-ratio:1/1;border-radius:11px;border:3px solid #fff;cursor:pointer;
+  box-shadow:0 2px 6px rgba(120,70,60,.16);transition:transform .12s;padding:0;
+}
+.sw:active{transform:scale(.88)}
+.sw.on{transform:scale(1.14);border-color:var(--ink);box-shadow:0 0 0 2px #fff, 0 4px 10px rgba(120,70,60,.3)}
+.sw.clear{background:
+  linear-gradient(45deg,transparent 44%,#ff3d71 44% 56%,transparent 56%),
+  repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 0 0 / 10px 10px;}
+
+.wordbar{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--ink);color:#fff;border-radius:14px;padding:10px 14px;margin-bottom:12px;
+}
+.wordbar .lbl{font-size:10px;letter-spacing:1.4px;text-transform:uppercase;opacity:.6;font-weight:800}
+.wordbar .val{font-family:'Pixelify Sans',monospace;font-size:20px}
+
+/* ---------- guess ---------- */
+.blanks{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:14px 0 4px}
+.blanks .sp{width:12px}
+.blk{
+  width:26px;height:34px;border-radius:8px;background:#fff;box-shadow:var(--shadow);
+  display:grid;place-items:center;font-family:'Pixelify Sans',monospace;font-size:20px;color:var(--pink);
+}
+.blk.empty{background:#fff;border-bottom:4px solid var(--blush)}
+.pips{display:flex;gap:7px;justify-content:center;margin-top:12px}
+.pip{width:12px;height:12px;border-radius:50%;background:var(--pink);box-shadow:0 2px 4px rgba(0,0,0,.1)}
+.pip.used{background:var(--line)}
+.badge{
+  display:inline-flex;align-items:center;gap:6px;background:var(--lilac);color:var(--purple);
+  border-radius:999px;padding:6px 13px;font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;
+}
+.toast{
+  position:fixed;left:50%;bottom:calc(26px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:#fff;padding:12px 20px;border-radius:999px;font-weight:800;font-size:14px;
+  opacity:0;pointer-events:none;transition:.25s;z-index:99;box-shadow:var(--shadow-lift);max-width:88vw;text-align:center;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.result-emoji{font-size:64px;text-align:center;line-height:1;margin:6px 0 10px;animation:bounce .6s cubic-bezier(.2,.9,.3,1.4)}
+@keyframes bounce{0%{transform:scale(0) rotate(-25deg)}60%{transform:scale(1.2) rotate(6deg)}100%{transform:scale(1)}}
+
+/* ---------- gallery ---------- */
+.gal{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.gal .item{background:#fff;border-radius:16px;padding:8px;box-shadow:var(--shadow);cursor:pointer;transition:transform .12s}
+.gal .item:active{transform:scale(.96)}
+.gal canvas{width:100%;aspect-ratio:1;image-rendering:pixelated;border-radius:10px;display:block;
+  background:repeating-conic-gradient(#f7ede6 0% 25%, #fffaf6 0% 50%) 0 0 / 16px 16px;}
+.gal .meta{text-align:center;padding:7px 2px 3px}
+.gal .meta .w{font-family:'Pixelify Sans',monospace;font-size:15px;line-height:1.1}
+.gal .meta .s{font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.empty-state{text-align:center;padding:34px 20px;color:var(--muted)}
+.empty-state .e{font-size:44px;margin-bottom:10px}
+
+.linkbox{
+  background:#fdf3ee;border:2px dashed var(--line);border-radius:14px;padding:11px 13px;
+  font-size:11px;font-family:ui-monospace,monospace;color:var(--muted);
+  word-break:break-all;max-height:76px;overflow:hidden;line-height:1.5;
+}
+.divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--muted);font-size:11px;font-weight:800;letter-spacing:1.4px}
+.divider::before,.divider::after{content:'';flex:1;height:2px;background:var(--line);border-radius:2px}
+.spacer{flex:1;min-height:12px}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ============ SETUP ============ -->
+<section class="screen" id="s-setup">
+  <div class="spacer"></div>
+  <div class="hero">
+    <div style="font-size:52px;line-height:1">💗</div>
+    <h1 class="px logo">Pixel Hearts</h1>
+    <p class="sub">draw it. send it. make them guess.</p>
+  </div>
+  <div class="card" style="margin-top:20px">
+    <label class="fld"><span>Your name</span><input type="text" id="in-me" placeholder="Christian" autocomplete="off" maxlength="14"></label>
+    <label class="fld" style="margin-bottom:16px"><span>Their name</span><input type="text" id="in-them" placeholder="Their name" autocomplete="off" maxlength="14"></label>
+    <button class="btn" id="btn-setup">Let's play →</button>
+  </div>
+  <div class="spacer"></div>
+  <p class="hint center">Everything is saved on this device only.<br>No accounts, no servers, no snooping.</p>
+</section>
+
+<!-- ============ HOME ============ -->
+<section class="screen" id="s-home">
+  <div class="hero">
+    <h1 class="px logo">Pixel Hearts</h1>
+    <p class="sub" id="home-sub">you &amp; them</p>
+  </div>
+
+  <div class="card" style="margin-top:14px;padding:14px">
+    <div class="stats">
+      <div class="stat"><div class="n px" id="st-solved">0</div><div class="l">Solved</div></div>
+      <div class="stat b"><div class="n px" id="st-streak">0</div><div class="l">Streak</div></div>
+      <div class="stat c"><div class="n px" id="st-rounds">0</div><div class="l">Rounds</div></div>
+    </div>
+  </div>
+
+  <div style="margin-top:14px">
+    <button class="btn" id="btn-newdraw">✏️ Draw something</button>
+  </div>
+
+  <div class="divider">OR</div>
+
+  <div class="card">
+    <label class="fld" style="margin-bottom:10px"><span>Got a link from them?</span>
+      <input type="text" id="in-link" placeholder="Paste it here" autocomplete="off"></label>
+    <button class="btn ghost sm" id="btn-openlink">Open it 📬</button>
+  </div>
+
+  <div class="card">
+    <h3 class="px" style="margin:0 0 12px;font-size:18px">How it works</h3>
+    <ol class="steps">
+      <li>Pick one of 3 secret words</li>
+      <li>Draw it with the pixel colors</li>
+      <li>Text them the link</li>
+      <li>They guess — you both get the result</li>
+    </ol>
+  </div>
+
+  <div class="spacer"></div>
+  <div class="row" style="margin-top:14px">
+    <button class="btn ghost sm" id="btn-gallery">🖼 Gallery</button>
+    <button class="btn ghost sm" id="btn-settings">⚙️ Names</button>
+  </div>
+</section>
+
+<!-- ============ PICK WORD ============ -->
+<section class="screen" id="s-pick">
+  <header class="top">
+    <button class="iconbtn" data-back="home">←</button>
+    <h1 class="px">Pick your word</h1>
+  </header>
+  <p class="hint" style="margin:0 0 16px">Choose one. <b id="pick-them">They</b> won't see it until they guess.</p>
+  <div id="pick-list"></div>
+  <div class="spacer"></div>
+  <button class="btn ghost sm" id="btn-reroll">🎲 New words</button>
+</section>
+
+<!-- ============ DRAW ============ -->
+<section class="screen" id="s-draw">
+  <header class="top">
+    <button class="iconbtn" data-back="pick">←</button>
+    <h1 class="px">Your turn</h1>
+    <button class="iconbtn" id="btn-togglegrid" title="Toggle grid">▦</button>
+  </header>
+
+  <div class="wordbar">
+    <span class="lbl">Draw</span>
+    <span class="val px" id="draw-word">—</span>
+  </div>
+
+  <div class="canvaswrap">
+    <canvas id="cv" width="16" height="16"></canvas>
+    <div class="gridlines" id="grid"></div>
+  </div>
+
+  <div class="toolbar">
+    <button class="tool on" data-tool="pen" title="Pencil">✏️</button>
+    <button class="tool" data-tool="fill" title="Fill">🪣</button>
+    <button class="tool" data-tool="eraser" title="Eraser">🧽</button>
+    <button class="tool" id="btn-undo" title="Undo">↩️</button>
+    <button class="tool" id="btn-clear" title="Clear">🗑</button>
+  </div>
+
+  <div class="palette" id="pal"></div>
+
+  <div class="spacer"></div>
+  <button class="btn" id="btn-done" style="margin-top:14px">Done — send it 💌</button>
+</section>
+
+<!-- ============ SEND ============ -->
+<section class="screen" id="s-send">
+  <header class="top">
+    <button class="iconbtn" data-back="draw">←</button>
+    <h1 class="px">Send it over</h1>
+  </header>
+
+  <div class="card center">
+    <div style="width:170px;margin:0 auto 12px"><canvas id="cv-preview" width="16" height="16"
+      style="width:100%;aspect-ratio:1;image-rendering:pixelated;border-radius:14px;box-shadow:var(--shadow);background:repeating-conic-gradient(#f7ede6 0% 25%, #fffaf6 0% 50%) 0 0 / 18px 18px"></canvas></div>
+    <div class="badge">🤫 secret: <span id="send-word" style="text-transform:none">—</span></div>
+  </div>
+
+  <div style="margin-top:14px">
+    <button class="btn purple" id="btn-share">📲 Share the link</button>
+  </div>
+  <div class="row" style="margin-top:10px">
+    <button class="btn ghost sm" id="btn-copy">📋 Copy link</button>
+    <button class="btn ghost sm" id="btn-test">👀 Preview</button>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="linkbox" id="linkbox">—</div>
+    <p class="hint" style="margin:10px 0 0">Text it to <b id="send-them">them</b>. Opening it shows the drawing and nothing else — the answer stays hidden until they guess.</p>
+  </div>
+
+  <div class="spacer"></div>
+  <button class="btn ghost sm" id="btn-sent" style="margin-top:14px">Sent it ✓ back home</button>
+</section>
+
+<!-- ============ GUESS ============ -->
+<section class="screen" id="s-guess">
+  <header class="top">
+    <button class="iconbtn" data-back="home">←</button>
+    <h1 class="px" id="guess-title">Guess this!</h1>
+  </header>
+
+  <div class="canvaswrap" style="box-shadow:var(--shadow)">
+    <canvas id="cv-guess" width="16" height="16"></canvas>
+  </div>
+
+  <div class="center" style="margin-top:14px">
+    <span class="badge" id="guess-cat">category</span>
+  </div>
+
+  <div class="blanks" id="blanks"></div>
+  <div class="pips" id="pips"></div>
+
+  <div class="card" style="margin-top:14px">
+    <input type="text" id="in-guess" placeholder="What is it?" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <button class="btn sm" id="btn-guess" style="margin-top:10px">Guess it 🎯</button>
+    <p class="hint center" id="guess-msg" style="margin:10px 0 0;min-height:19px"></p>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn ghost sm" id="btn-giveup" style="margin-top:14px">I give up 🏳️</button>
+</section>
+
+<!-- ============ RESULT ============ -->
+<section class="screen" id="s-result">
+  <header class="top"><h1 class="px" id="res-title">Result</h1></header>
+
+  <div class="card center">
+    <div class="result-emoji" id="res-emoji">🎉</div>
+    <h2 class="px" style="margin:0 0 6px;font-size:26px" id="res-head">Nailed it!</h2>
+    <p class="hint" id="res-body" style="margin:0 0 14px">—</p>
+    <div style="width:150px;margin:0 auto"><canvas id="cv-result" width="16" height="16"
+      style="width:100%;aspect-ratio:1;image-rendering:pixelated;border-radius:14px;box-shadow:var(--shadow);background:repeating-conic-gradient(#f7ede6 0% 25%, #fffaf6 0% 50%) 0 0 / 18px 18px"></canvas></div>
+    <div class="badge" style="margin-top:12px">it was: <b id="res-word" style="text-transform:none">—</b></div>
+  </div>
+
+  <div style="margin-top:14px" id="res-actions"></div>
+  <div class="spacer"></div>
+  <button class="btn ghost sm" id="btn-reshome" style="margin-top:14px">🏠 Home</button>
+</section>
+
+<!-- ============ GALLERY ============ -->
+<section class="screen" id="s-gallery">
+  <header class="top">
+    <button class="iconbtn" data-back="home">←</button>
+    <h1 class="px">Gallery</h1>
+  </header>
+  <div id="gal-wrap"></div>
+  <div class="spacer"></div>
+</section>
+
+<!-- ============ SETTINGS ============ -->
+<section class="screen" id="s-settings">
+  <header class="top">
+    <button class="iconbtn" data-back="home">←</button>
+    <h1 class="px">Names</h1>
+  </header>
+  <div class="card">
+    <label class="fld"><span>You</span><input type="text" id="set-me" maxlength="14"></label>
+    <label class="fld" style="margin-bottom:16px"><span>Them</span><input type="text" id="set-them" maxlength="14"></label>
+    <button class="btn sm" id="btn-savenames">Save</button>
+  </div>
+  <div class="card">
+    <p class="hint" style="margin:0 0 12px">Wipe scores, streak and the whole gallery on this device.</p>
+    <button class="btn ghost sm" id="btn-reset">🗑 Reset everything</button>
+  </div>
+  <div class="spacer"></div>
+</section>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* =========================================================
+   Pixel Hearts — a 2-player pixel draw-and-guess game.
+   Whole round travels inside the URL hash, so there is no
+   server: you text the link, they open it, they guess.
+   ========================================================= */
+
+const N = 16;                      // grid is 16x16
+const CELLS = N * N;
+
+// index 0 is transparent; 1..15 are the palette. 4 bits per pixel.
+const PAL = [
+  null,
+  '#ffffff', '#ffe9c9', '#ffc9a3', '#ff8fa3', '#ff3d71',
+  '#ffd93d', '#ff9f1c', '#a8e6a1', '#2fa36b', '#9bdcff',
+  '#3a6ff0', '#c9a7ff', '#7b4fb5', '#a4805f', '#2b2320'
+];
+
+/* ---------- word bank ---------- */
+const WORDS = {
+  'Food 🍕': ['pizza','ice cream','taco','sushi','pancakes','coffee','cupcake','watermelon','ramen','donut','avocado','strawberry','hot dog','popcorn','cheeseburger','boba tea','cookie','spaghetti','pineapple','cereal'],
+  'Animals 🐙': ['cat','dog','penguin','octopus','bunny','fox','whale','bee','turtle','owl','panda','snail','dolphin','hedgehog','frog','ladybug','sloth','shark','duck','butterfly'],
+  'Us 💘': ['heart','kiss','hug','wedding ring','love letter','first date','holding hands','cuddle','soulmate','valentine','bouquet','slow dance','matching pajamas','forehead kiss','date night','honeymoon','promise ring','blushing'],
+  'Home 🛋': ['couch','lamp','toothbrush','blanket','houseplant','tv remote','laundry','alarm clock','candle','mirror','bathtub','teapot','bookshelf','slippers','pillow fight','fridge','shower','vacuum'],
+  'Out 🌅': ['beach','road trip','campfire','ferris wheel','movie theater','picnic','rainy day','sunset','airplane','hiking','snowman','umbrella','fireworks','hot air balloon','lighthouse','farmers market','ski trip','aquarium'],
+  'Random 🌈': ['rainbow','ghost','robot','alien','guitar','rocket','dinosaur','treasure map','wizard','mermaid','volcano','pirate','unicorn','skateboard','crown','tornado','cactus','jellyfish']
+};
+const CATS = Object.keys(WORDS);
+
+/* =========================================================
+   encoding — grid -> RLE -> base64url, round -> JSON -> b64url
+   ========================================================= */
+function bytesToB64(bytes){
+  let s = '';
+  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function b64ToBytes(str){
+  str = str.replace(/-/g,'+').replace(/_/g,'/');
+  while (str.length % 4) str += '=';
+  const bin = atob(str);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+// run-length: one byte per run = (colorIndex << 4) | (runLength - 1), max run 16
+function encodeGrid(g){
+  const out = [];
+  let i = 0;
+  while (i < CELLS){
+    const v = g[i];
+    let n = 1;
+    while (i + n < CELLS && g[i + n] === v && n < 16) n++;
+    out.push((v << 4) | (n - 1));
+    i += n;
+  }
+  return bytesToB64(Uint8Array.from(out));
+}
+function decodeGrid(s){
+  const b = b64ToBytes(s);
+  const g = new Uint8Array(CELLS);
+  let p = 0;
+  for (let i = 0; i < b.length && p < CELLS; i++){
+    const v = b[i] >> 4, n = (b[i] & 15) + 1;
+    for (let k = 0; k < n && p < CELLS; k++) g[p++] = v;
+  }
+  return g;
+}
+// Light XOR scramble so the answer is not readable by anyone who idly
+// base64-decodes the link (or by a link preview). Not security — anti-spoiler.
+const MASK = [0x5b,0xa3,0x1f,0xc7,0x6e,0x92,0x38,0xd4,0x77,0x0b,0xe5,0x41];
+function scramble(bytes){
+  const out = new Uint8Array(bytes.length);
+  for (let i = 0; i < bytes.length; i++) out[i] = bytes[i] ^ MASK[i % MASK.length];
+  return out;
+}
+function encPayload(obj){
+  return bytesToB64(scramble(new TextEncoder().encode(JSON.stringify(obj))));
+}
+function decPayload(s){
+  return JSON.parse(new TextDecoder().decode(scramble(b64ToBytes(s))));
+}
+
+/* =========================================================
+   persistent state
+   ========================================================= */
+const KEY = 'pixelhearts.v1';
+const DEFAULTS = { me:'', them:'', solved:0, rounds:0, streak:0, best:0, gallery:[] };
+let S = load();
+
+function load(){
+  try {
+    const raw = localStorage.getItem(KEY);
+    return raw ? Object.assign({}, DEFAULTS, JSON.parse(raw)) : Object.assign({}, DEFAULTS);
+  } catch(e){ return Object.assign({}, DEFAULTS); }
+}
+function save(){
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){}
+}
+function remember(entry){
+  S.gallery.unshift(entry);
+  if (S.gallery.length > 60) S.gallery.length = 60;
+  save();
+}
+
+/* =========================================================
+   tiny dom helpers
+   ========================================================= */
+const $  = (id) => document.getElementById(id);
+const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
+
+let current = 'home';
+function show(name){
+  current = name;
+  $$('.screen').forEach(s => s.classList.toggle('active', s.id === 's' + '-' + name));
+  window.scrollTo(0, 0);
+}
+let toastTimer = null;
+function toast(msg){
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 1900);
+}
+function buzz(ms){ if (navigator.vibrate) { try { navigator.vibrate(ms); } catch(e){} } }
+
+/* =========================================================
+   rendering a grid onto a canvas
+   ========================================================= */
+function paint(canvas, grid, mask){
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, N, N);
+  for (let i = 0; i < CELLS; i++){
+    if (mask && !mask[i]) continue;
+    const v = grid[i];
+    if (!v) continue;
+    ctx.fillStyle = PAL[v];
+    ctx.fillRect(i % N, (i / N) | 0, 1, 1);
+  }
+}
+
+/* =========================================================
+   DRAW screen
+   ========================================================= */
+let grid = new Uint8Array(CELLS);
+let undoStack = [];
+let tool = 'pen';
+let color = 5;                 // start on the pink
+let round = null;              // { word, cat }
+
+function buildPalette(){
+  const pal = $('pal');
+  pal.innerHTML = '';
+  for (let i = 1; i < PAL.length; i++){
+    const b = document.createElement('button');
+    b.className = 'sw' + (i === color ? ' on' : '');
+    b.style.background = PAL[i];
+    b.dataset.i = i;
+    b.addEventListener('click', () => {
+      color = i;
+      if (tool === 'eraser') setTool('pen');
+      $$('.sw', pal).forEach(x => x.classList.toggle('on', +x.dataset.i === i));
+    });
+    pal.appendChild(b);
+  }
+}
+function setTool(t){
+  tool = t;
+  $$('.tool[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === t));
+}
+function pushUndo(){
+  undoStack.push(grid.slice());
+  if (undoStack.length > 40) undoStack.shift();
+}
+function floodFill(start, target){
+  const from = grid[start];
+  if (from === target) return;
+  const stack = [start];
+  while (stack.length){
+    const i = stack.pop();
+    if (grid[i] !== from) continue;
+    grid[i] = target;
+    const x = i % N, y = (i / N) | 0;
+    if (x > 0)     stack.push(i - 1);
+    if (x < N - 1) stack.push(i + 1);
+    if (y > 0)     stack.push(i - N);
+    if (y < N - 1) stack.push(i + N);
+  }
+}
+
+const cv = $('cv');
+let drawing = false, lastCell = -1;
+
+function cellAt(ev){
+  const r = cv.getBoundingClientRect();
+  const x = Math.floor((ev.clientX - r.left) / r.width  * N);
+  const y = Math.floor((ev.clientY - r.top)  / r.height * N);
+  if (x < 0 || y < 0 || x >= N || y >= N) return -1;
+  return y * N + x;
+}
+function applyAt(i){
+  if (i < 0 || i === lastCell) return;
+  lastCell = i;
+  if (tool === 'fill'){ floodFill(i, color); }
+  else { grid[i] = (tool === 'eraser') ? 0 : color; }
+  paint(cv, grid);
+}
+cv.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  try { cv.setPointerCapture(e.pointerId); } catch(err){}
+  pushUndo();
+  drawing = true; lastCell = -1;
+  applyAt(cellAt(e));
+  buzz(6);
+});
+cv.addEventListener('pointermove', (e) => {
+  if (!drawing || tool === 'fill') return;
+  e.preventDefault();
+  applyAt(cellAt(e));
+});
+const stopDraw = () => { drawing = false; lastCell = -1; };
+cv.addEventListener('pointerup', stopDraw);
+cv.addEventListener('pointercancel', stopDraw);
+cv.addEventListener('contextmenu', e => e.preventDefault());
+
+$$('.tool[data-tool]').forEach(b => b.addEventListener('click', () => setTool(b.dataset.tool)));
+$('btn-undo').addEventListener('click', () => {
+  if (!undoStack.length) return toast('Nothing to undo');
+  grid = undoStack.pop();
+  paint(cv, grid);
+  buzz(8);
+});
+$('btn-clear').addEventListener('click', () => {
+  if (!grid.some(v => v)) return;
+  pushUndo();
+  grid = new Uint8Array(CELLS);
+  paint(cv, grid);
+  toast('Cleared');
+});
+$('btn-togglegrid').addEventListener('click', () => $('grid').classList.toggle('off'));
+
+/* =========================================================
+   word picking
+   ========================================================= */
+function pickThree(){
+  const cats = CATS.slice().sort(() => Math.random() - 0.5).slice(0, 3);
+  return cats.map(c => {
+    const list = WORDS[c];
+    return { word: list[(Math.random() * list.length) | 0], cat: c };
+  });
+}
+function renderPick(){
+  $('pick-them').textContent = S.them || 'They';
+  const list = $('pick-list');
+  list.innerHTML = '';
+  pickThree().forEach((opt, idx) => {
+    const emo = opt.cat.trim().split(' ').pop();
+    const name = opt.cat.replace(emo, '').trim();
+    const b = document.createElement('button');
+    b.className = 'wordcard';
+    b.style.borderLeftColor = ['#ff8fa3','#c9a7ff','#a8e6a1'][idx];
+    b.innerHTML = '<span class="emo">' + emo + '</span><span class="txt"><span class="w px"></span><span class="c"></span></span>';
+    $$('.w', b)[0].textContent = opt.word;
+    $$('.c', b)[0].textContent = name;
+    b.addEventListener('click', () => startDrawing(opt));
+    list.appendChild(b);
+  });
+}
+function startDrawing(opt){
+  round = opt;
+  grid = new Uint8Array(CELLS);
+  undoStack = [];
+  setTool('pen');
+  paint(cv, grid);
+  $('draw-word').textContent = opt.word;
+  show('draw');
+}
+
+/* =========================================================
+   sending
+   ========================================================= */
+function baseUrl(){ return location.href.split('#')[0]; }
+let sendLink = '';
+
+$('btn-done').addEventListener('click', () => {
+  const used = grid.reduce((a, v) => a + (v ? 1 : 0), 0);
+  if (used < 6) return toast('Draw a bit more first! ✏️');
+
+  const payload = { t:'d', a:S.me, w:round.word, c:round.cat, g:encodeGrid(grid) };
+  sendLink = baseUrl() + '#' + encPayload(payload);
+
+  paint($('cv-preview'), grid);
+  $('send-word').textContent = round.word;
+  $('send-them').textContent = S.them || 'them';
+  $('linkbox').textContent = sendLink;
+  show('send');
+});
+
+async function shareLink(){
+  const text = (S.me ? S.me : 'Someone') + ' drew something for you 💗 guess what it is:';
+  if (navigator.share){
+    try { await navigator.share({ title:'Pixel Hearts', text, url:sendLink }); return; }
+    catch(e){ if (e && e.name === 'AbortError') return; }
+  }
+  copyLink();
+}
+async function copyLink(){
+  try {
+    await navigator.clipboard.writeText(sendLink);
+    toast('Link copied 📋');
+  } catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = sendLink;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); toast('Link copied 📋'); }
+    catch(e2){ toast('Copy it from the box below'); }
+    ta.remove();
+  }
+}
+$('btn-share').addEventListener('click', shareLink);
+$('btn-copy').addEventListener('click', copyLink);
+$('btn-test').addEventListener('click', () => {
+  openRound({ t:'d', a:S.me, w:round.word, c:round.cat, g:encodeGrid(grid) }, true);
+});
+$('btn-sent').addEventListener('click', () => {
+  S.rounds++;
+  remember({ g:encodeGrid(grid), w:round.word, by:S.me || 'You', at:Date.now(), state:'sent' });
+  save(); renderHome(); show('home');
+  toast('Sent! Now go bug them 😄');
+});
+
+/* =========================================================
+   guessing
+   ========================================================= */
+let guessRound = null, tries = 0, revealed = 0, previewMode = false;
+const MAX_TRIES = 4;
+
+function norm(s){
+  return String(s).toLowerCase()
+    .replace(/[^a-z0-9 ]/g, '')
+    .replace(/\b(a|an|the)\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+function lev(a, b){
+  if (a === b) return 0;
+  const m = a.length, n = b.length;
+  if (!m || !n) return m || n;
+  let prev = Array.from({ length: n + 1 }, (_, i) => i);
+  for (let i = 1; i <= m; i++){
+    const cur = [i];
+    for (let j = 1; j <= n; j++){
+      cur[j] = Math.min(prev[j] + 1, cur[j-1] + 1, prev[j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return prev[n];
+}
+function matches(guess, answer){
+  const g = norm(guess), a = norm(answer);
+  if (!g) return false;
+  if (g === a) return true;
+  const sing = (s) => s.replace(/(\w)s\b/g, '$1');       // pancakes -> pancake
+  if (sing(g) === sing(a)) return true;
+  // longer answers get more slack, so "dolfin" still counts for "dolphin"
+  const slack = a.length >= 7 ? 2 : (a.length >= 5 ? 1 : 0);
+  if (slack && lev(sing(g), sing(a)) <= slack) return true;
+  // multi-word answers: accept the distinctive word ("ferris" for "ferris wheel")
+  const parts = a.split(' ');
+  if (parts.length > 1 && parts.length === g.split(' ').length){
+    if (parts.every((p, i) => lev(p, g.split(' ')[i]) <= 1)) return true;
+  }
+  return false;
+}
+function renderBlanks(word, count){
+  const wrap = $('blanks');
+  wrap.innerHTML = '';
+  let letterIdx = 0;
+  for (const ch of word){
+    if (ch === ' '){
+      const sp = document.createElement('span');
+      sp.className = 'sp';
+      wrap.appendChild(sp);
+      continue;
+    }
+    const d = document.createElement('div');
+    const on = letterIdx < count;
+    d.className = 'blk' + (on ? '' : ' empty');
+    d.textContent = on ? ch.toUpperCase() : '';
+    wrap.appendChild(d);
+    letterIdx++;
+  }
+}
+function renderPips(){
+  const p = $('pips');
+  p.innerHTML = '';
+  for (let i = 0; i < MAX_TRIES; i++){
+    const d = document.createElement('div');
+    d.className = 'pip' + (i < tries ? ' used' : '');
+    p.appendChild(d);
+  }
+}
+function revealAnimated(canvas, g){
+  const mask = new Uint8Array(CELLS);
+  const order = Array.from({ length: CELLS }, (_, i) => i).sort(() => Math.random() - 0.5);
+  let k = 0;
+  paint(canvas, g, mask);
+  (function step(){
+    const chunk = 14;
+    for (let i = 0; i < chunk && k < CELLS; i++, k++) mask[order[k]] = 1;
+    paint(canvas, g, mask);
+    if (k < CELLS) requestAnimationFrame(step);
+  })();
+}
+function openRound(p, isPreview){
+  previewMode = !!isPreview;
+  guessRound = p;
+  tries = 0; revealed = 0;
+  const g = decodeGrid(p.g);
+  revealAnimated($('cv-guess'), g);
+  $('guess-title').textContent = previewMode ? 'Preview' : ((p.a || 'They') + ' drew this!');
+  $('guess-cat').textContent = p.c || 'mystery';
+  renderBlanks(p.w, 0);
+  renderPips();
+  $('in-guess').value = '';
+  $('guess-msg').textContent = previewMode ? 'This is exactly what they will see.' : '';
+  show('guess');
+}
+function submitGuess(){
+  if (!guessRound) return;
+  const val = $('in-guess').value.trim();
+  if (!val) return;
+
+  if (matches(val, guessRound.w)){
+    finishGuess(true, tries + 1, val);
+    return;
+  }
+  tries++;
+  renderPips();
+  buzz(30);
+  $('in-guess').value = '';
+  if (tries >= MAX_TRIES){
+    finishGuess(false, tries, val);
+    return;
+  }
+  revealed++;
+  renderBlanks(guessRound.w, revealed);
+  const nudges = ['Not quite 👀', 'Nope — here\'s a letter', 'Getting warmer? Another letter', 'Last chance!'];
+  $('guess-msg').textContent = nudges[Math.min(tries, nudges.length - 1)];
+}
+$('btn-guess').addEventListener('click', submitGuess);
+$('in-guess').addEventListener('keydown', e => { if (e.key === 'Enter') submitGuess(); });
+$('btn-giveup').addEventListener('click', () => {
+  if (!guessRound) return;
+  finishGuess(false, MAX_TRIES, '(gave up)');
+});
+
+/* =========================================================
+   results
+   ========================================================= */
+function finishGuess(solved, usedTries, lastGuess){
+  const p = guessRound;
+
+  if (!previewMode){
+    S.rounds++;
+    if (solved){ S.solved++; S.streak++; S.best = Math.max(S.best, S.streak); }
+    else { S.streak = 0; }
+    remember({ g:p.g, w:p.w, by:p.a || 'Them', at:Date.now(), state: solved ? 'solved' : 'missed', tries:usedTries });
+    save();
+  }
+
+  paint($('cv-result'), decodeGrid(p.g));
+  $('res-word').textContent = p.w;
+  $('res-title').textContent = previewMode ? 'Preview result' : 'Result';
+  $('res-emoji').textContent = solved ? (usedTries === 1 ? '🏆' : '🎉') : '😵‍💫';
+  $('res-head').textContent  = solved
+    ? (usedTries === 1 ? 'First try!' : 'Got it!')
+    : 'So close...';
+  $('res-body').textContent  = solved
+    ? 'You guessed it in ' + usedTries + (usedTries === 1 ? ' try.' : ' tries.') + (S.streak > 1 && !previewMode ? ' Streak: ' + S.streak + ' 🔥' : '')
+    : 'That one beat you. ' + (p.a || 'They') + ' drew "' + p.w + '".';
+
+  const acts = $('res-actions');
+  acts.innerHTML = '';
+  if (previewMode){
+    const back = mkBtn('btn ghost', '← Back to sending', () => show('send'));
+    acts.appendChild(back);
+  } else {
+    const resPayload = { t:'r', a:S.me, o:p.a, w:p.w, c:p.c, g:p.g, s:solved ? 1 : 0, n:usedTries };
+    const link = baseUrl() + '#' + encPayload(resPayload);
+    acts.appendChild(mkBtn('btn purple', '📲 Tell ' + (p.a || 'them'), async () => {
+      const text = solved
+        ? (S.me || 'They') + ' guessed "' + p.w + '" in ' + usedTries + (usedTries === 1 ? ' try!' : ' tries!')
+        : (S.me || 'They') + ' could not get "' + p.w + '" 😅';
+      if (navigator.share){
+        try { await navigator.share({ title:'Pixel Hearts', text, url:link }); return; } catch(e){ if (e && e.name === 'AbortError') return; }
+      }
+      try { await navigator.clipboard.writeText(link); toast('Result link copied 📋'); }
+      catch(e){ toast('Could not copy — try Share'); }
+    }));
+    const back = mkBtn('btn', '✏️ Draw one back', () => { renderPick(); show('pick'); });
+    back.style.marginTop = '10px';
+    acts.appendChild(back);
+  }
+  renderHome();
+  show('result');
+  if (solved && !previewMode) buzz([12, 60, 12]);
+}
+function mkBtn(cls, label, fn){
+  const b = document.createElement('button');
+  b.className = cls;
+  b.textContent = label;
+  b.addEventListener('click', fn);
+  return b;
+}
+function openResult(p){
+  paint($('cv-result'), decodeGrid(p.g));
+  const solved = !!p.s;
+  const who = p.a || 'They';
+  $('res-title').textContent = 'They played it';
+  $('res-word').textContent = p.w;
+  $('res-emoji').textContent = solved ? (p.n === 1 ? '🏆' : '🎉') : '😵‍💫';
+  $('res-head').textContent = solved ? who + ' got it!' : who + ' missed it';
+  $('res-body').textContent = solved
+    ? 'Guessed "' + p.w + '" in ' + p.n + (p.n === 1 ? ' try.' : ' tries.')
+    : 'Your "' + p.w + '" was too cryptic 😄';
+
+  // mark my own sent drawing in the gallery with how it went
+  const hit = S.gallery.find(x => x.g === p.g && x.state === 'sent');
+  if (hit){ hit.state = solved ? 'solved' : 'missed'; hit.tries = p.n; }
+  if (solved){ S.solved++; S.streak++; S.best = Math.max(S.best, S.streak); }
+  else { S.streak = 0; }
+  save();
+
+  const acts = $('res-actions');
+  acts.innerHTML = '';
+  acts.appendChild(mkBtn('btn', '✏️ Your turn to draw', () => { renderPick(); show('pick'); }));
+  renderHome();
+  show('result');
+}
+
+/* =========================================================
+   gallery
+   ========================================================= */
+function renderGallery(){
+  const wrap = $('gal-wrap');
+  wrap.innerHTML = '';
+  if (!S.gallery.length){
+    wrap.innerHTML = '<div class="empty-state"><div class="e">🖼</div><b>Nothing here yet</b><br><span class="hint">Every drawing you send or guess lands here.</span></div>';
+    return;
+  }
+  const gal = document.createElement('div');
+  gal.className = 'gal';
+  S.gallery.forEach(item => {
+    const d = document.createElement('div');
+    d.className = 'item';
+    const c = document.createElement('canvas');
+    c.width = N; c.height = N;
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    const label = item.state === 'solved' ? '✓ solved' + (item.tries ? ' · ' + item.tries : '')
+                : item.state === 'missed' ? '✗ missed'
+                : '↗ sent';
+    meta.innerHTML = '<div class="w px"></div><div class="s"></div>';
+    d.appendChild(c); d.appendChild(meta);
+    gal.appendChild(d);
+    $$('.w', meta)[0].textContent = item.w;
+    $$('.s', meta)[0].textContent = 'by ' + item.by + ' · ' + label;
+    paint(c, decodeGrid(item.g));
+  });
+  wrap.appendChild(gal);
+}
+
+/* =========================================================
+   home + navigation
+   ========================================================= */
+function renderHome(){
+  $('st-solved').textContent = S.solved;
+  $('st-streak').textContent = S.streak;
+  $('st-rounds').textContent = S.rounds;
+  $('home-sub').textContent = (S.me || 'You') + ' & ' + (S.them || 'Them');
+}
+$$('[data-back]').forEach(b => b.addEventListener('click', () => {
+  const to = b.dataset.back;
+  if (to === 'pick') renderPick();
+  if (to === 'home') renderHome();
+  show(to);
+}));
+$('btn-newdraw').addEventListener('click', () => { renderPick(); show('pick'); });
+$('btn-reroll').addEventListener('click', renderPick);
+$('btn-gallery').addEventListener('click', () => { renderGallery(); show('gallery'); });
+$('btn-reshome').addEventListener('click', () => { renderHome(); show('home'); });
+$('btn-settings').addEventListener('click', () => {
+  $('set-me').value = S.me; $('set-them').value = S.them;
+  show('settings');
+});
+$('btn-savenames').addEventListener('click', () => {
+  S.me = $('set-me').value.trim() || S.me;
+  S.them = $('set-them').value.trim() || S.them;
+  save(); renderHome(); show('home'); toast('Saved ✓');
+});
+$('btn-reset').addEventListener('click', () => {
+  const me = S.me, them = S.them;
+  S = Object.assign({}, DEFAULTS, { me, them });
+  save(); renderHome(); show('home'); toast('Wiped clean');
+});
+$('btn-setup').addEventListener('click', () => {
+  const me = $('in-me').value.trim(), them = $('in-them').value.trim();
+  if (!me || !them) return toast('Both names please 💕');
+  S.me = me; S.them = them; save();
+  renderHome(); show('home');
+});
+$('btn-openlink').addEventListener('click', () => {
+  const v = $('in-link').value.trim();
+  if (!v) return toast('Paste the link first');
+  const hash = v.includes('#') ? v.split('#')[1] : v;
+  if (!route(hash)) toast('That link looks broken 🤔');
+  $('in-link').value = '';
+});
+
+/* =========================================================
+   routing from the URL hash
+   ========================================================= */
+function route(hash){
+  if (!hash) return false;
+  let p;
+  try { p = decPayload(hash); } catch(e){ return false; }
+  if (!p || !p.g || !p.w) return false;
+  if (p.t === 'r') openResult(p);
+  else openRound(p, false);
+  return true;
+}
+function boot(){
+  buildPalette();
+  paint(cv, grid);
+  renderHome();
+  const hash = location.hash.slice(1);
+  if (hash && route(hash)){
+    // arriving via a link: clear the hash so a refresh doesn't replay the round
+    history.replaceState(null, '', baseUrl());
+    if (!S.me) { /* they can name themselves later in settings */ }
+    return;
+  }
+  show(S.me ? 'home' : 'setup');
+}
+window.addEventListener('hashchange', () => {
+  const h = location.hash.slice(1);
+  if (h && route(h)) history.replaceState(null, '', baseUrl());
+});
+boot();
+</script>
+</body>
+</html>
