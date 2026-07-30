@@ -30,28 +30,33 @@ from showing up if someone idly base64-decodes the link or a preview unfurls it.
 Scores and streak live in `localStorage`, per device. The gallery is shared —
 see below.
 
-## Shared gallery (the profile)
+## Accounts and the shared gallery
 
-Two phones holding the same **pair code** see one gallery. The code is 16
-random url-safe characters generated on-device; the invite link carries it so
-the other phone joins on first open, and any game link doubles as an invite.
+You claim a **unique username** with a 4-8 digit PIN, then sign in on any
+phone — your display name, your partner and the shared gallery all follow the
+login rather than the device.
 
-Rounds sync through Supabase. The client never touches the table directly:
+Pairing is by username with consent: you request `@them`, they accept. Until
+they accept, neither of you can see the other's rounds. On accept both accounts
+move onto one pair code and the requester's existing rounds come with them, so
+no history is lost.
 
-| function | who calls it | what it does |
-|---|---|---|
-| `ph_add_round` | artist on send, guesser on open | registers the round (idempotent) |
-| `ph_finish_round` | guesser on result | writes outcome, tries, guesser |
-| `ph_get_rounds` | gallery screen | returns that pair's rounds |
+| function | what it does |
+|---|---|
+| `ph_claim` / `ph_login` | returns a session token; PIN is bcrypt-hashed, never returned |
+| `ph_me` | display name, partner, pending requests |
+| `ph_request_pair` / `ph_accept_pair` / `ph_unpair` | consent-based pairing |
+| `ph_add_round` / `ph_finish_round` / `ph_get_rounds` | the gallery, scoped to your pair |
 
-The table has RLS on with **zero policies** and permissions revoked, so the
-public anon key grants nothing by itself. Every function requires the pair
-code and refuses anything under 12 characters. Wrong code returns nothing and
-writes nothing — verified.
+All four tables have RLS on with **zero policies** and permissions revoked, so
+the public anon key grants nothing by itself. Every function past login takes a
+session token and derives the username server-side — the client never says who
+it is. Ten wrong PINs locks an account for 15 minutes.
 
-Every cloud call is best-effort and wrapped: with no network, or with the keys
-left blank, the game plays exactly as before and the gallery falls back to
-whatever is on that phone.
+The device stores the session token, never the PIN.
+
+Sign-in is optional. Without it the game plays exactly as it always has, over
+links, with the gallery living on that phone only.
 
 ### Setting it up
 
@@ -65,8 +70,8 @@ const SUPABASE_URL      = 'https://xxxxxxxx.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGci...';
 ```
 
-Both are safe to commit — that is what the anon key is for, and the schema is
-built on the assumption it is public.
+Both are safe to commit — that is what the anon key is for, and the schema
+assumes it is public.
 
 ## Running it
 

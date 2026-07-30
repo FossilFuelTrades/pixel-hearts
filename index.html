@@ -487,45 +487,49 @@ input[type=text]:focus{border-color:var(--pink-soft);background:#fff}
     <p class="hint" id="pf-note" style="margin:0">—</p>
   </div>
 
-  <div class="card" id="pf-linked" style="display:none">
-    <p class="hint" style="margin:0 0 10px"><b>Pair code.</b> Whoever holds this sees the
-      shared gallery, so treat it like a password. It is the only key — losing it
-      means losing the history.</p>
-    <div class="code" id="pf-code">—</div>
-    <div class="row" style="margin-top:12px">
-      <button class="btn purple sm" id="btn-invite">📲 Send invite</button>
-      <button class="btn ghost sm" id="btn-copycode">📋 Copy code</button>
+  <!-- signed out -->
+  <div class="card" id="pf-auth" style="display:none">
+    <div class="row" style="margin-bottom:14px">
+      <button class="btn sm" id="tab-login">Sign in</button>
+      <button class="btn ghost sm" id="tab-claim">New username</button>
     </div>
+    <label class="fld"><span>Username</span>
+      <input type="text" id="in-user" placeholder="christian" autocomplete="username"
+             autocapitalize="off" spellcheck="false" maxlength="16"></label>
+    <label class="fld" id="fld-display" style="display:none"><span>Display name</span>
+      <input type="text" id="in-display" placeholder="Christian" autocomplete="off" maxlength="24"></label>
+    <label class="fld"><span>PIN (4-8 digits)</span>
+      <input type="text" id="in-pin" placeholder="••••" inputmode="numeric"
+             autocomplete="off" maxlength="8"></label>
+    <button class="btn sm" id="btn-auth">Sign in</button>
+    <p class="hint center" id="auth-msg" style="margin:10px 0 0;min-height:18px"></p>
   </div>
 
-  <div class="card" id="pf-unlinked" style="display:none">
-    <p class="hint" style="margin:0 0 12px">Start a shared profile, then send the invite
-      to <b id="pf-them">them</b>. Once they accept, every drawing either of you makes
-      lands in the same gallery.</p>
-    <button class="btn sm" id="btn-makepair">💞 Create shared profile</button>
-    <div class="divider">OR JOIN THEIRS</div>
-    <label class="fld" style="margin-bottom:10px"><span>Their pair code</span>
-      <input type="text" id="in-code" placeholder="Paste the code" autocomplete="off" spellcheck="false"></label>
-    <button class="btn ghost sm" id="btn-joincode">Join profile</button>
+  <!-- signed in -->
+  <div class="card" id="pf-account" style="display:none">
+    <p class="hint" style="margin:0 0 10px">Signed in as</p>
+    <div class="code" id="pf-user">—</div>
+    <p class="hint" style="margin:10px 0 0" id="pf-partner-note">—</p>
+  </div>
+
+  <div class="card" id="pf-pairing" style="display:none">
+    <label class="fld" style="margin-bottom:10px"><span>Pair with their username</span>
+      <input type="text" id="in-partner" placeholder="their username"
+             autocapitalize="off" spellcheck="false" maxlength="16"></label>
+    <button class="btn sm" id="btn-reqpair">💞 Send pair request</button>
+    <p class="hint center" id="pair-msg" style="margin:10px 0 0;min-height:18px"></p>
+  </div>
+
+  <div class="card" id="pf-pending" style="display:none">
+    <p class="hint" style="margin:0 0 10px"><b>Pair requests</b></p>
+    <div id="pending-list"></div>
   </div>
 
   <div class="spacer"></div>
-  <button class="btn ghost sm" id="btn-unpair" style="margin-top:14px;display:none">Leave shared profile</button>
-</section>
-
-<!-- ============ JOIN (from an invite link) ============ -->
-<section class="screen" id="s-join">
-  <div class="spacer"></div>
-  <div class="card center">
-    <div style="font-size:52px;line-height:1">💌</div>
-    <h2 class="px" style="margin:10px 0 6px;font-size:26px" id="join-head">You're invited</h2>
-    <p class="hint" id="join-note" style="margin:0 0 16px">—</p>
-    <label class="fld" style="text-align:left"><span>Your name</span>
-      <input type="text" id="in-joinme" placeholder="Your name" autocomplete="off" maxlength="14"></label>
-    <button class="btn" id="btn-acceptjoin">Join 💞</button>
+  <div class="row" style="margin-top:14px">
+    <button class="btn ghost sm" id="btn-unpair" style="display:none">Unpair</button>
+    <button class="btn ghost sm" id="btn-signout" style="display:none">Sign out</button>
   </div>
-  <div class="spacer"></div>
-  <button class="btn ghost sm" id="btn-declinejoin">No thanks</button>
 </section>
 
 <!-- ============ SETTINGS ============ -->
@@ -644,7 +648,9 @@ function decPayload(s){
    persistent state
    ========================================================= */
 const KEY = 'pixelhearts.v1';
-const DEFAULTS = { me:'', them:'', pair:'', solved:0, rounds:0, streak:0, best:0, gallery:[] };
+// `token` is a session handed back by login; the PIN is never kept on device.
+const DEFAULTS = { me:'', them:'', user:'', token:'', partner:'',
+                   solved:0, rounds:0, streak:0, best:0, gallery:[] };
 let S = load();
 
 function load(){
@@ -665,13 +671,8 @@ function remember(entry){
 }
 
 /* =========================================================
-   the shared profile — a pair code both phones hold
+   accounts + the shared gallery
    ========================================================= */
-function newPairCode(){
-  const b = new Uint8Array(12);
-  crypto.getRandomValues(b);
-  return bytesToB64(b);                  // 16 url-safe chars, ~96 bits
-}
 function newId(){
   if (crypto.randomUUID) return crypto.randomUUID();
   const b = new Uint8Array(16);
@@ -680,7 +681,8 @@ function newId(){
   const h = Array.from(b, x => x.toString(16).padStart(2,'0')).join('');
   return h.slice(0,8)+'-'+h.slice(8,12)+'-'+h.slice(12,16)+'-'+h.slice(16,20)+'-'+h.slice(20);
 }
-const cloudReady = () => !!(SUPABASE_URL && SUPABASE_ANON_KEY && S.pair);
+const cloudConfigured = () => !!(SUPABASE_URL && SUPABASE_ANON_KEY);
+const cloudReady = () => cloudConfigured() && !!S.token;
 
 async function rpc(fn, args){
   const res = await fetch(SUPABASE_URL.replace(/\/+$/,'') + '/rest/v1/rpc/' + fn, {
@@ -692,7 +694,13 @@ async function rpc(fn, args){
     },
     body: JSON.stringify(args)
   });
-  if (!res.ok) throw new Error(fn + ' -> ' + res.status + ' ' + (await res.text()).slice(0,160));
+  if (!res.ok){
+    let msg = '';
+    try { msg = (JSON.parse(await res.text()).message) || ''; } catch(e){}
+    const err = new Error(msg || (fn + ' failed (' + res.status + ')'));
+    err.status = res.status;
+    throw err;
+  }
   const txt = await res.text();
   return txt ? JSON.parse(txt) : null;
 }
@@ -702,19 +710,39 @@ async function rpc(fn, args){
 async function cloudAddRound(r){
   if (!cloudReady()) return;
   try { await rpc('ph_add_round',
-    { p_id:r.id, p_pair:S.pair, p_artist:r.by, p_word:r.w, p_cat:r.cat || '', p_grid:r.g }); }
+    { p_token:S.token, p_id:r.id, p_word:r.w, p_cat:r.cat || '', p_grid:r.g }); }
   catch(e){ console.warn('[cloud] add failed', e.message); }
 }
-async function cloudFinishRound(id, guesser, state, tries){
+async function cloudFinishRound(id, state, tries){
   if (!cloudReady()) return;
   try { await rpc('ph_finish_round',
-    { p_id:id, p_pair:S.pair, p_guesser:guesser, p_state:state, p_tries:tries }); }
+    { p_token:S.token, p_id:id, p_state:state, p_tries:tries }); }
   catch(e){ console.warn('[cloud] finish failed', e.message); }
 }
 async function cloudFetch(){
   if (!cloudReady()) return null;
-  try { return await rpc('ph_get_rounds', { p_pair:S.pair, p_limit:120 }); }
+  try { return await rpc('ph_get_rounds', { p_token:S.token, p_limit:120 }); }
   catch(e){ console.warn('[cloud] fetch failed', e.message); return null; }
+}
+// refreshes name / partner / pending requests, and detects a dead session
+async function cloudMe(){
+  if (!cloudReady()) return null;
+  try {
+    const rows = await rpc('ph_me', { p_token:S.token });
+    const m = rows && rows[0];
+    if (m){
+      S.me = m.display || S.me;
+      S.user = m.username;
+      S.partner = m.partner || '';
+      S.them = m.partner_display || (m.partner ? m.partner : S.them);
+      save();
+    }
+    return m;
+  } catch(e){
+    if (/not signed in/i.test(e.message)){ S.token = ''; save(); }
+    console.warn('[cloud] me failed', e.message);
+    return null;
+  }
 }
 // server rows win on shared fields; anything drawn before pairing is kept
 function mergeRounds(rows){
@@ -919,7 +947,7 @@ $('btn-done').addEventListener('click', () => {
 
   // pair code rides along so the other phone joins the profile on first open
   const payload = { t:'d', a:S.me, w:round.word, c:round.cat, g:encodeGrid(grid),
-                    i:round.id, p:S.pair || undefined };
+                    i:round.id };
   sendLink = baseUrl() + '#' + encPayload(payload);
 
   paint($('cv-preview'), grid);
@@ -1052,11 +1080,7 @@ function revealAnimated(canvas, g){
 function openRound(p, isPreview){
   previewMode = !!isPreview;
   guessRound = p;
-  if (!previewMode && p.p && !S.pair){       // first link from them = auto-join
-    S.pair = p.p;
-    if (p.a && !S.them) S.them = p.a;
-    save();
-  }
+  if (!previewMode && p.a && !S.them){ S.them = p.a; save(); }
   tries = 0; revealed = 0;
   const g = decodeGrid(p.g);
   revealAnimated($('cv-guess'), g);
@@ -1116,7 +1140,7 @@ function finishGuess(solved, usedTries, lastGuess){
     if (p.i){
       // the artist may not have reached the server, so register then finish
       cloudAddRound({ id:p.i, by:p.a || 'Them', w:p.w, cat:p.c, g:p.g })
-        .then(() => cloudFinishRound(p.i, meName, solved ? 'solved' : 'missed', usedTries));
+        .then(() => cloudFinishRound(p.i, solved ? 'solved' : 'missed', usedTries));
     }
   }
 
@@ -1138,7 +1162,7 @@ function finishGuess(solved, usedTries, lastGuess){
     acts.appendChild(back);
   } else {
     const resPayload = { t:'r', a:S.me, o:p.a, w:p.w, c:p.c, g:p.g,
-                         s:solved ? 1 : 0, n:usedTries, i:p.i, p:S.pair || undefined };
+                         s:solved ? 1 : 0, n:usedTries, i:p.i };
     const link = baseUrl() + '#' + encPayload(resPayload);
     acts.appendChild(mkBtn('btn purple', '📲 Tell ' + (p.a || 'them'), async () => {
       const text = solved
@@ -1177,8 +1201,6 @@ function openResult(p){
     ? 'Guessed "' + p.w + '" in ' + p.n + (p.n === 1 ? ' try.' : ' tries.')
     : 'Your "' + p.w + '" was too cryptic 😄';
 
-  if (p.p && !S.pair){ S.pair = p.p; save(); }
-
   // mark my own sent drawing in the gallery with how it went
   const hit = p.i ? S.gallery.find(x => x.id === p.i)
                   : S.gallery.find(x => x.g === p.g && x.state === 'sent');
@@ -1208,8 +1230,8 @@ async function refreshGallery(){
     bar.className = 'syncbar warn';
     return;
   }
-  if (!S.pair){
-    bar.textContent = 'Local only — no shared profile yet';
+  if (!S.token){
+    bar.textContent = 'Local only — sign in to share a gallery';
     bar.className = 'syncbar warn';
     return;
   }
@@ -1218,7 +1240,8 @@ async function refreshGallery(){
   const rows = await cloudFetch();
   if (rows){
     mergeRounds(rows);
-    bar.textContent = 'Shared with ' + (S.them || 'them') + ' · ' + rows.length + ' round' + (rows.length === 1 ? '' : 's');
+    bar.textContent = (S.partner ? 'Shared with ' + (S.them || '@' + S.partner) : 'Your rounds')
+      + ' · ' + rows.length + ' round' + (rows.length === 1 ? '' : 's');
     bar.className = 'syncbar ok';
     renderGallery();
   } else {
@@ -1266,111 +1289,152 @@ function renderHome(){
   // though you are still linked to someone you just left
   $('home-sub').textContent = pairLabel();
   $('prof-names').textContent = pairLabel();
-  $('profile-card').querySelector('.pair').textContent = S.pair ? '💞' : '👤';
+  $('profile-card').querySelector('.pair').textContent = S.partner ? '💞' : '👤';
   const st = $('prof-state');
-  if (S.pair){ st.textContent = 'Shared gallery on'; st.className = 'linked'; }
+  if (S.partner){ st.textContent = 'Shared gallery on'; st.className = 'linked'; }
+  else if (S.token){ st.textContent = 'Signed in · not paired'; st.className = ''; }
   else { st.textContent = 'Gallery is this phone only'; st.className = ''; }
 }
 function pairLabel(){
   const me = S.me || 'You';
-  return S.pair ? me + ' & ' + (S.them || 'Them') : me;
+  return S.partner ? me + ' & ' + (S.them || 'Them') : me;
 }
 
 /* =========================================================
    profile screen
    ========================================================= */
-function inviteLink(){
-  return baseUrl() + '#' + encPayload({ t:'j', a:S.me, p:S.pair });
+let authMode = 'login';                 // 'login' | 'claim'
+function setAuthMode(m){
+  authMode = m;
+  $('tab-login').className = 'btn sm' + (m === 'login' ? '' : ' ghost');
+  $('tab-claim').className = 'btn sm' + (m === 'claim' ? '' : ' ghost');
+  $('fld-display').style.display = m === 'claim' ? '' : 'none';
+  $('btn-auth').textContent = m === 'claim' ? 'Claim username' : 'Sign in';
+  $('auth-msg').textContent = '';
 }
+$('tab-login').addEventListener('click', () => setAuthMode('login'));
+$('tab-claim').addEventListener('click', () => setAuthMode('claim'));
+
 function renderProfile(){
+  const signedIn = !!S.token;
   $('pf-names').textContent = pairLabel();
-  $('pf-them').textContent = S.them || 'them';
-  const linked = !!S.pair;
-  $('pf-linked').style.display   = linked ? '' : 'none';
-  $('pf-unlinked').style.display = linked ? 'none' : '';
-  $('btn-unpair').style.display  = linked ? '' : 'none';
-  $('pf-code').textContent = S.pair || '—';
-  $('pf-note').textContent = linked
-    ? 'Every drawing either of you sends lands in one shared gallery.'
-    : 'Right now your gallery lives only on this phone.';
-  if (linked && !(SUPABASE_URL && SUPABASE_ANON_KEY)){
-    $('pf-note').textContent = 'Profile is set, but the shared store is not configured yet.';
-  }
+  $('pf-auth').style.display     = signedIn ? 'none' : '';
+  $('pf-account').style.display  = signedIn ? '' : 'none';
+  $('pf-pairing').style.display  = signedIn && !S.partner ? '' : 'none';
+  $('btn-unpair').style.display  = signedIn && S.partner ? '' : 'none';
+  $('btn-signout').style.display = signedIn ? '' : 'none';
+  $('pf-user').textContent = S.user ? '@' + S.user : '—';
+  $('pf-partner-note').textContent = S.partner
+    ? 'Paired with @' + S.partner + ' — one shared gallery.'
+    : 'Not paired yet. Your gallery is yours alone.';
+  $('pf-note').textContent = !cloudConfigured()
+    ? 'Accounts are not switched on yet — waiting on the backend keys.'
+    : signedIn
+      ? (S.partner ? 'Every drawing either of you sends lands in one gallery.'
+                   : 'Pair with them to share a gallery.')
+      : 'Sign in so your name and gallery follow you to any phone.';
+  if (!signedIn) setAuthMode(authMode);
+  renderPending([]);
   show('profile');
+  if (signedIn) syncMe();
+}
+function renderPending(list){
+  const wrap = $('pending-list');
+  $('pf-pending').style.display = list && list.length ? '' : 'none';
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  (list || []).forEach(u => {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.style.marginBottom = '8px';
+    const label = document.createElement('div');
+    label.style.cssText = 'flex:1;display:flex;align-items:center;font-weight:800';
+    label.textContent = '@' + u;
+    const yes = mkBtn('btn sm', 'Accept', async () => {
+      try {
+        await rpc('ph_accept_pair', { p_token:S.token, p_from:u });
+        await syncMe();
+        renderHome(); renderProfile();
+        toast('Paired with @' + u + ' 💞');
+      } catch(e){ toast(e.message); }
+    });
+    yes.style.flex = '0 0 auto';
+    row.appendChild(label); row.appendChild(yes);
+    wrap.appendChild(row);
+  });
+}
+async function syncMe(){
+  const m = await cloudMe();
+  if (m) renderPending(m.pending || []);
+  renderHome();
+  if ($('pf-user')) $('pf-user').textContent = S.user ? '@' + S.user : '—';
+  return m;
 }
 $('btn-profile').addEventListener('click', renderProfile);
-$('btn-makepair').addEventListener('click', () => {
-  S.pair = newPairCode(); save();
-  renderHome(); renderProfile();
-  toast('Profile created 💞');
-});
-$('btn-joincode').addEventListener('click', () => {
-  const v = $('in-code').value.trim();
-  if (v.length < 12) return toast('That code looks too short');
-  S.pair = v; save();
-  $('in-code').value = '';
-  renderHome(); renderProfile();
-  toast('Joined 💞');
-});
-$('btn-copycode').addEventListener('click', async () => {
-  try { await navigator.clipboard.writeText(S.pair); toast('Code copied 📋'); }
-  catch(e){ toast('Copy it from the box above'); }
-});
-$('btn-invite').addEventListener('click', async () => {
-  const url = inviteLink();
-  const text = (S.me || 'I') + ' started a Pixel Hearts profile with you 💞';
-  if (navigator.share){
-    try { await navigator.share({ title:'Pixel Hearts', text, url }); return; }
-    catch(e){ if (e && e.name === 'AbortError') return; }
+
+$('btn-auth').addEventListener('click', async () => {
+  if (!cloudConfigured()) return toast('Accounts not switched on yet');
+  const user = $('in-user').value.trim().toLowerCase();
+  const pin  = $('in-pin').value.trim();
+  const disp = $('in-display').value.trim();
+  const msg  = $('auth-msg');
+  if (!/^[a-z0-9_]{3,16}$/.test(user)) return msg.textContent = '3-16 letters, numbers or _';
+  if (!/^[0-9]{4,8}$/.test(pin))       return msg.textContent = 'PIN must be 4-8 digits';
+  msg.textContent = 'Working…';
+  try {
+    const token = authMode === 'claim'
+      ? await rpc('ph_claim', { p_username:user, p_display:disp || user, p_pin:pin })
+      : await rpc('ph_login', { p_username:user, p_pin:pin });
+    S.token = token; S.user = user;
+    if (authMode === 'claim' && disp) S.me = disp;
+    save();
+    $('in-pin').value = '';
+    await syncMe();
+    renderProfile();
+    toast(authMode === 'claim' ? 'Username claimed 🎉' : 'Signed in ✓');
+  } catch(e){
+    msg.textContent = e.message;
   }
-  try { await navigator.clipboard.writeText(url); toast('Invite link copied 📋'); }
-  catch(e){ toast('Could not copy — try again'); }
 });
-// two-tap, because the pair code is the only key to the shared gallery and a
-// stray tap would otherwise throw it away with nothing to recover from
+
+$('btn-reqpair').addEventListener('click', async () => {
+  const who = $('in-partner').value.trim().toLowerCase();
+  const msg = $('pair-msg');
+  if (!who) return msg.textContent = 'Their username first';
+  msg.textContent = 'Sending…';
+  try {
+    const r = await rpc('ph_request_pair', { p_token:S.token, p_partner:who });
+    $('in-partner').value = '';
+    if (r === 'paired'){
+      await syncMe(); renderProfile();
+      toast('Paired 💞');
+    } else {
+      msg.textContent = 'Request sent — @' + who + ' has to accept it.';
+    }
+  } catch(e){ msg.textContent = e.message; }
+});
+
+// two-tap: unpairing hands the shared history to them and leaves you empty
 let unpairArmed = null;
-$('btn-unpair').addEventListener('click', () => {
+$('btn-unpair').addEventListener('click', async () => {
   const b = $('btn-unpair');
   if (!unpairArmed){
-    b.textContent = '⚠️ Tap again — copy your code first';
-    unpairArmed = setTimeout(() => {
-      unpairArmed = null;
-      b.textContent = 'Leave shared profile';
-    }, 5000);
+    b.textContent = '⚠️ Tap again to unpair';
+    unpairArmed = setTimeout(() => { unpairArmed = null; b.textContent = 'Unpair'; }, 5000);
     return;
   }
   clearTimeout(unpairArmed); unpairArmed = null;
-  b.textContent = 'Leave shared profile';
-  S.pair = ''; save();
-  renderHome(); renderProfile();
-  toast('Left the shared profile');
+  b.textContent = 'Unpair';
+  try { await rpc('ph_unpair', { p_token:S.token }); } catch(e){ toast(e.message); }
+  await syncMe(); renderProfile();
+  toast('Unpaired');
 });
 
-/* ---------- joining from an invite link ---------- */
-let pendingJoin = null;
-function openJoin(p){
-  pendingJoin = p;
-  $('join-head').textContent = (p.a || 'Someone') + ' invited you';
-  $('join-note').textContent = 'Join and you two share one gallery — every drawing, '
-    + 'from either phone, in the same place.';
-  $('in-joinme').value = S.me || '';
-  show('join');
-}
-$('btn-acceptjoin').addEventListener('click', () => {
-  const me = $('in-joinme').value.trim();
-  if (!me) return toast('Your name first 💕');
-  if (!pendingJoin || !pendingJoin.p) return toast('That invite looks broken');
-  S.me = me;
-  S.them = pendingJoin.a || S.them;
-  S.pair = pendingJoin.p;
-  save(); pendingJoin = null;
-  renderHome(); show('home');
-  toast('Paired 💞 gallery is shared');
-});
-$('btn-declinejoin').addEventListener('click', () => {
-  pendingJoin = null;
-  renderHome();
-  show(S.me ? 'home' : 'setup');
+$('btn-signout').addEventListener('click', async () => {
+  try { await rpc('ph_logout', { p_token:S.token }); } catch(e){}
+  S.token = ''; S.user = ''; S.partner = ''; save();
+  renderHome(); renderProfile();
+  toast('Signed out');
 });
 $$('[data-back]').forEach(b => b.addEventListener('click', () => {
   const to = b.dataset.back;
@@ -1403,7 +1467,6 @@ $('btn-setup').addEventListener('click', () => {
   const me = $('in-me').value.trim(), them = $('in-them').value.trim();
   if (!me || !them) return toast('Both names please 💕');
   S.me = me; S.them = them;
-  if (!S.pair) S.pair = newPairCode();   // start a profile straight away
   save();
   renderHome(); show('home');
 });
@@ -1423,11 +1486,6 @@ function route(hash){
   let p;
   try { p = decPayload(hash); } catch(e){ return false; }
   if (!p) return false;
-  if (p.t === 'j'){                      // invite to share a profile
-    if (!p.p) return false;
-    openJoin(p);
-    return true;
-  }
   if (!p.g || !p.w) return false;
   if (p.t === 'r') openResult(p);
   else openRound(p, false);
