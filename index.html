@@ -21,6 +21,9 @@
   --cream:#fff8f2; --card:#ffffff; --ink:#2b2320; --muted:#8a7a72;
   --sunny:#ffd93d; --mint:#a8e6a1; --green:#2fa36b;
   --line:#f0e2da;
+  /* deliberately a neutral taupe: not white, and not any palette colour,
+     so every colour you pick reads clearly against it */
+  --canvas-bg:#b0a6a0;
   --shadow:0 10px 30px rgba(120,70,60,.10), 0 2px 6px rgba(120,70,60,.06);
   --shadow-lift:0 16px 40px rgba(120,70,60,.16);
   --r:20px;
@@ -129,8 +132,7 @@ input[type=text]:focus{border-color:var(--pink-soft);background:#fff}
 .canvaswrap{
   position:relative;width:100%;aspect-ratio:1/1;border-radius:18px;overflow:hidden;
   box-shadow:var(--shadow-lift);touch-action:none;user-select:none;
-  background:
-    repeating-conic-gradient(#faf2ec 0% 25%, #fffcf9 0% 50%) 0 0 / calc(100%/8) calc(100%/8);
+  background:var(--canvas-bg);
 }
 .canvaswrap canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;display:block}
 .gridlines{
@@ -140,15 +142,36 @@ input[type=text]:focus{border-color:var(--pink-soft);background:#fff}
     linear-gradient(to bottom, rgba(120,90,80,.17) 1px, transparent 1px);
   background-size:calc(100%/16) 100%, 100% calc(100%/16);
 }
-.gridlines.off{display:none}
-
 .toolbar{display:flex;gap:8px;margin-top:12px}
 .tool{
+  position:relative;
   flex:1;border:none;background:#fff;border-radius:14px;padding:11px 0;font-size:19px;
   box-shadow:var(--shadow);cursor:pointer;transition:transform .12s, background .12s;
 }
 .tool:active{transform:scale(.92)}
 .tool.on{background:var(--ink);color:#fff}
+
+/* hover label so it is obvious what each tool does */
+.tool::after{
+  content:attr(data-tip);
+  position:absolute;bottom:calc(100% + 9px);left:50%;
+  transform:translateX(-50%) translateY(5px);
+  background:var(--ink);color:#fff;
+  font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;
+  letter-spacing:.6px;text-transform:uppercase;
+  padding:5px 10px;border-radius:9px;white-space:nowrap;
+  opacity:0;pointer-events:none;transition:opacity .14s ease, transform .14s ease;z-index:6;
+}
+.tool::before{
+  content:'';position:absolute;bottom:calc(100% + 3px);left:50%;
+  transform:translateX(-50%) translateY(5px);
+  border:5px solid transparent;border-top-color:var(--ink);
+  opacity:0;pointer-events:none;transition:opacity .14s ease, transform .14s ease;z-index:6;
+}
+@media (hover:hover){
+  .tool:hover::after,.tool:hover::before{opacity:1;transform:translateX(-50%) translateY(0)}
+}
+.tool:focus-visible::after,.tool:focus-visible::before{opacity:1;transform:translateX(-50%) translateY(0)}
 
 .palette{display:grid;grid-template-columns:repeat(8,1fr);gap:7px;margin-top:10px}
 .sw{
@@ -198,7 +221,7 @@ input[type=text]:focus{border-color:var(--pink-soft);background:#fff}
 .gal .item{background:#fff;border-radius:16px;padding:8px;box-shadow:var(--shadow);cursor:pointer;transition:transform .12s}
 .gal .item:active{transform:scale(.96)}
 .gal canvas{width:100%;aspect-ratio:1;image-rendering:pixelated;border-radius:10px;display:block;
-  background:repeating-conic-gradient(#f7ede6 0% 25%, #fffaf6 0% 50%) 0 0 / 16px 16px;}
+  background:var(--canvas-bg);}
 .gal .meta{text-align:center;padding:7px 2px 3px}
 .gal .meta .w{font-family:'Pixelify Sans',monospace;font-size:15px;line-height:1.1}
 .gal .meta .s{font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
@@ -296,7 +319,6 @@ input[type=text]:focus{border-color:var(--pink-soft);background:#fff}
   <header class="top">
     <button class="iconbtn" data-back="pick">←</button>
     <h1 class="px">Your turn</h1>
-    <button class="iconbtn" id="btn-togglegrid" title="Toggle grid">▦</button>
   </header>
 
   <div class="wordbar">
@@ -310,11 +332,11 @@ input[type=text]:focus{border-color:var(--pink-soft);background:#fff}
   </div>
 
   <div class="toolbar">
-    <button class="tool on" data-tool="pen" title="Pencil">✏️</button>
-    <button class="tool" data-tool="fill" title="Fill">🪣</button>
-    <button class="tool" data-tool="eraser" title="Eraser">🧽</button>
-    <button class="tool" id="btn-undo" title="Undo">↩️</button>
-    <button class="tool" id="btn-clear" title="Clear">🗑</button>
+    <button class="tool on" data-tool="pen"    data-tip="Pencil" aria-label="Pencil">✏️</button>
+    <button class="tool"    data-tool="fill"   data-tip="Fill"   aria-label="Fill">🪣</button>
+    <button class="tool"    data-tool="eraser" data-tip="Eraser" aria-label="Eraser">🧽</button>
+    <button class="tool" id="btn-undo"  data-tip="Undo"  aria-label="Undo">↩️</button>
+    <button class="tool" id="btn-clear" data-tip="Clear" aria-label="Clear">🗑</button>
   </div>
 
   <div class="palette" id="pal"></div>
@@ -332,7 +354,7 @@ input[type=text]:focus{border-color:var(--pink-soft);background:#fff}
 
   <div class="card center">
     <div style="width:170px;margin:0 auto 12px"><canvas id="cv-preview" width="16" height="16"
-      style="width:100%;aspect-ratio:1;image-rendering:pixelated;border-radius:14px;box-shadow:var(--shadow);background:repeating-conic-gradient(#f7ede6 0% 25%, #fffaf6 0% 50%) 0 0 / 18px 18px"></canvas></div>
+      style="width:100%;aspect-ratio:1;image-rendering:pixelated;border-radius:14px;box-shadow:var(--shadow);background:var(--canvas-bg)"></canvas></div>
     <div class="badge">🤫 secret: <span id="send-word" style="text-transform:none">—</span></div>
   </div>
 
@@ -389,7 +411,7 @@ input[type=text]:focus{border-color:var(--pink-soft);background:#fff}
     <h2 class="px" style="margin:0 0 6px;font-size:26px" id="res-head">Nailed it!</h2>
     <p class="hint" id="res-body" style="margin:0 0 14px">—</p>
     <div style="width:150px;margin:0 auto"><canvas id="cv-result" width="16" height="16"
-      style="width:100%;aspect-ratio:1;image-rendering:pixelated;border-radius:14px;box-shadow:var(--shadow);background:repeating-conic-gradient(#f7ede6 0% 25%, #fffaf6 0% 50%) 0 0 / 18px 18px"></canvas></div>
+      style="width:100%;aspect-ratio:1;image-rendering:pixelated;border-radius:14px;box-shadow:var(--shadow);background:var(--canvas-bg)"></canvas></div>
     <div class="badge" style="margin-top:12px">it was: <b id="res-word" style="text-transform:none">—</b></div>
   </div>
 
@@ -670,7 +692,6 @@ $('btn-clear').addEventListener('click', () => {
   paint(cv, grid);
   toast('Cleared');
 });
-$('btn-togglegrid').addEventListener('click', () => $('grid').classList.toggle('off'));
 
 /* =========================================================
    word picking
