@@ -198,13 +198,6 @@ input[type=text]:focus{border-color:var(--pink-soft);background:#fff}
 .wordbar .val{font-family:'Pixelify Sans',monospace;font-size:20px}
 
 /* ---------- guess ---------- */
-.blanks{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:14px 0 4px}
-.blanks .sp{width:12px}
-.blk{
-  width:26px;height:34px;border-radius:8px;background:#fff;box-shadow:var(--shadow);
-  display:grid;place-items:center;font-family:'Pixelify Sans',monospace;font-size:20px;color:var(--pink);
-}
-.blk.empty{background:#fff;border-bottom:4px solid var(--blush)}
 .pips{display:flex;gap:7px;justify-content:center;margin-top:12px}
 .pip{width:12px;height:12px;border-radius:50%;background:var(--pink);box-shadow:0 2px 4px rgba(0,0,0,.1)}
 .pip.used{background:var(--line)}
@@ -432,7 +425,6 @@ input[type=text]:focus{border-color:var(--pink-soft);background:#fff}
     <span class="badge" id="guess-cat">category</span>
   </div>
 
-  <div class="blanks" id="blanks"></div>
   <div class="pips" id="pips"></div>
 
   <div class="card" style="margin-top:14px">
@@ -997,7 +989,7 @@ $('btn-sent').addEventListener('click', () => {
 /* =========================================================
    guessing
    ========================================================= */
-let guessRound = null, tries = 0, revealed = 0, previewMode = false;
+let guessRound = null, tries = 0, previewMode = false;
 const MAX_TRIES = 4;
 
 function norm(s){
@@ -1037,24 +1029,14 @@ function matches(guess, answer){
   }
   return false;
 }
-function renderBlanks(word, count){
-  const wrap = $('blanks');
-  wrap.innerHTML = '';
-  let letterIdx = 0;
-  for (const ch of word){
-    if (ch === ' '){
-      const sp = document.createElement('span');
-      sp.className = 'sp';
-      wrap.appendChild(sp);
-      continue;
-    }
-    const d = document.createElement('div');
-    const on = letterIdx < count;
-    d.className = 'blk' + (on ? '' : ' empty');
-    d.textContent = on ? ch.toUpperCase() : '';
-    wrap.appendChild(d);
-    letterIdx++;
-  }
+// Hints deliberately never leak the length — that was giving it away instantly.
+function missHint(word, misses){
+  const w = word.trim();
+  const first = w[0].toUpperCase();
+  const parts = w.split(/\s+/).length;
+  if (misses <= 1) return 'Not quite 👀';
+  if (misses === 2) return 'Nope — it starts with ' + first;
+  return 'Last chance! ' + (parts > 1 ? parts + ' words' : 'One word') + ', starts with ' + first;
 }
 function renderPips(){
   const p = $('pips');
@@ -1081,12 +1063,11 @@ function openRound(p, isPreview){
   previewMode = !!isPreview;
   guessRound = p;
   if (!previewMode && p.a && !S.them){ S.them = p.a; save(); }
-  tries = 0; revealed = 0;
+  tries = 0;
   const g = decodeGrid(p.g);
   revealAnimated($('cv-guess'), g);
   $('guess-title').textContent = previewMode ? 'Preview' : ((p.a || 'They') + ' drew this!');
   $('guess-cat').textContent = p.c || 'mystery';
-  renderBlanks(p.w, 0);
   renderPips();
   $('in-guess').value = '';
   $('guess-msg').textContent = previewMode ? 'This is exactly what they will see.' : '';
@@ -1109,10 +1090,7 @@ function submitGuess(){
     finishGuess(false, tries, val);
     return;
   }
-  revealed++;
-  renderBlanks(guessRound.w, revealed);
-  const nudges = ['Not quite 👀', 'Nope — here\'s a letter', 'Getting warmer? Another letter', 'Last chance!'];
-  $('guess-msg').textContent = nudges[Math.min(tries, nudges.length - 1)];
+  $('guess-msg').textContent = missHint(guessRound.w, tries);
 }
 $('btn-guess').addEventListener('click', submitGuess);
 $('in-guess').addEventListener('keydown', e => { if (e.key === 'Enter') submitGuess(); });

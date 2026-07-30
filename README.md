@@ -9,7 +9,7 @@ One person draws a secret word on a 16×16 pixel grid, texts a link, the other g
 2. Draw it on the 16×16 grid — 15 colors, pencil / fill / eraser / undo / clear
 3. Tap **Send** → native share sheet or copy link
 4. They open the link: drawing reveals pixel-by-pixel, category is the only hint
-5. 4 guesses, one letter revealed per miss, fuzzy matching on typos/plurals
+5. 4 guesses, hints that never reveal the length, fuzzy matching on typos/plurals
 6. Result screen → they send the outcome back → your turn to draw
 
 ## How it works with no server
