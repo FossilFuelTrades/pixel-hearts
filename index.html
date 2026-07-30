@@ -234,6 +234,33 @@ input[type=text]:focus{border-color:var(--pink-soft);background:#fff}
 .empty-state{text-align:center;padding:34px 20px;color:var(--muted)}
 .empty-state .e{font-size:44px;margin-bottom:10px}
 
+.syncbar{
+  font-size:12px;font-weight:800;letter-spacing:.4px;color:var(--muted);
+  background:#fff;border-radius:12px;padding:9px 13px;margin-bottom:12px;
+  box-shadow:var(--shadow);text-align:center;
+}
+.syncbar.ok{color:var(--green);background:#effaf3}
+.syncbar.warn{color:#a8762b;background:#fff6e6}
+
+.profile{
+  display:flex;align-items:center;gap:12px;
+  background:#fff;border-radius:var(--r);box-shadow:var(--shadow);padding:14px 16px;margin-top:14px;
+}
+.profile .pair{
+  flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+  width:44px;height:44px;border-radius:14px;background:var(--blush);font-size:20px;
+}
+.profile .who{flex:1;min-width:0}
+.profile .who b{display:block;font-family:'Pixelify Sans',monospace;font-size:19px;line-height:1.15}
+.profile .who span{display:block;font-size:11px;font-weight:800;letter-spacing:.7px;
+  text-transform:uppercase;color:var(--muted);margin-top:3px}
+.profile .who span.linked{color:var(--green)}
+.code{
+  font-family:ui-monospace,monospace;font-size:15px;font-weight:700;letter-spacing:1px;
+  background:#fdf3ee;border:2px dashed var(--line);border-radius:12px;
+  padding:11px 13px;text-align:center;word-break:break-all;
+}
+
 .linkbox{
   background:#fdf3ee;border:2px dashed var(--line);border-radius:14px;padding:11px 13px;
   font-size:11px;font-family:ui-monospace,monospace;color:var(--muted);
@@ -269,6 +296,15 @@ input[type=text]:focus{border-color:var(--pink-soft);background:#fff}
   <div class="hero">
     <h1 class="px logo">Pixel Hearts</h1>
     <p class="sub" id="home-sub">you &amp; them</p>
+  </div>
+
+  <div class="profile" id="profile-card">
+    <div class="pair">💞</div>
+    <div class="who">
+      <b id="prof-names">—</b>
+      <span id="prof-state">—</span>
+    </div>
+    <button class="btn ghost sm" id="btn-profile" style="flex:0 0 auto;width:auto">Profile</button>
   </div>
 
   <div class="card" style="margin-top:14px;padding:14px">
@@ -431,9 +467,65 @@ input[type=text]:focus{border-color:var(--pink-soft);background:#fff}
   <header class="top">
     <button class="iconbtn" data-back="home">←</button>
     <h1 class="px">Gallery</h1>
+    <button class="iconbtn" id="btn-refresh" aria-label="Refresh">⟳</button>
   </header>
+  <div class="syncbar" id="gal-sync">—</div>
   <div id="gal-wrap"></div>
   <div class="spacer"></div>
+</section>
+
+<!-- ============ PROFILE ============ -->
+<section class="screen" id="s-profile">
+  <header class="top">
+    <button class="iconbtn" data-back="home">←</button>
+    <h1 class="px">Your profile</h1>
+  </header>
+
+  <div class="card center">
+    <div style="font-size:44px;line-height:1">💞</div>
+    <h2 class="px" style="margin:8px 0 4px;font-size:24px" id="pf-names">—</h2>
+    <p class="hint" id="pf-note" style="margin:0">—</p>
+  </div>
+
+  <div class="card" id="pf-linked" style="display:none">
+    <p class="hint" style="margin:0 0 10px"><b>Pair code.</b> Whoever holds this sees the
+      shared gallery, so treat it like a password. It is the only key — losing it
+      means losing the history.</p>
+    <div class="code" id="pf-code">—</div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn purple sm" id="btn-invite">📲 Send invite</button>
+      <button class="btn ghost sm" id="btn-copycode">📋 Copy code</button>
+    </div>
+  </div>
+
+  <div class="card" id="pf-unlinked" style="display:none">
+    <p class="hint" style="margin:0 0 12px">Start a shared profile, then send the invite
+      to <b id="pf-them">them</b>. Once they accept, every drawing either of you makes
+      lands in the same gallery.</p>
+    <button class="btn sm" id="btn-makepair">💞 Create shared profile</button>
+    <div class="divider">OR JOIN THEIRS</div>
+    <label class="fld" style="margin-bottom:10px"><span>Their pair code</span>
+      <input type="text" id="in-code" placeholder="Paste the code" autocomplete="off" spellcheck="false"></label>
+    <button class="btn ghost sm" id="btn-joincode">Join profile</button>
+  </div>
+
+  <div class="spacer"></div>
+  <button class="btn ghost sm" id="btn-unpair" style="margin-top:14px;display:none">Leave shared profile</button>
+</section>
+
+<!-- ============ JOIN (from an invite link) ============ -->
+<section class="screen" id="s-join">
+  <div class="spacer"></div>
+  <div class="card center">
+    <div style="font-size:52px;line-height:1">💌</div>
+    <h2 class="px" style="margin:10px 0 6px;font-size:26px" id="join-head">You're invited</h2>
+    <p class="hint" id="join-note" style="margin:0 0 16px">—</p>
+    <label class="fld" style="text-align:left"><span>Your name</span>
+      <input type="text" id="in-joinme" placeholder="Your name" autocomplete="off" maxlength="14"></label>
+    <button class="btn" id="btn-acceptjoin">Join 💞</button>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn ghost sm" id="btn-declinejoin">No thanks</button>
 </section>
 
 <!-- ============ SETTINGS ============ -->
@@ -464,6 +556,13 @@ input[type=text]:focus{border-color:var(--pink-soft);background:#fff}
    Whole round travels inside the URL hash, so there is no
    server: you text the link, they open it, they guess.
    ========================================================= */
+
+/* ---------- shared-gallery config ----------
+   Both values are meant to be public; the anon key grants nothing on its own
+   because the table is locked and every function demands the pair code.
+   Leave them blank and the game still works, just local-only. */
+const SUPABASE_URL      = '';
+const SUPABASE_ANON_KEY = '';
 
 const N = 16;                      // grid is 16x16
 const CELLS = N * N;
@@ -545,7 +644,7 @@ function decPayload(s){
    persistent state
    ========================================================= */
 const KEY = 'pixelhearts.v1';
-const DEFAULTS = { me:'', them:'', solved:0, rounds:0, streak:0, best:0, gallery:[] };
+const DEFAULTS = { me:'', them:'', pair:'', solved:0, rounds:0, streak:0, best:0, gallery:[] };
 let S = load();
 
 function load(){
@@ -558,8 +657,80 @@ function save(){
   try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){}
 }
 function remember(entry){
-  S.gallery.unshift(entry);
-  if (S.gallery.length > 60) S.gallery.length = 60;
+  const i = entry.id ? S.gallery.findIndex(g => g.id === entry.id) : -1;
+  if (i >= 0) S.gallery[i] = Object.assign(S.gallery[i], entry);
+  else S.gallery.unshift(entry);
+  if (S.gallery.length > 120) S.gallery.length = 120;
+  save();
+}
+
+/* =========================================================
+   the shared profile — a pair code both phones hold
+   ========================================================= */
+function newPairCode(){
+  const b = new Uint8Array(12);
+  crypto.getRandomValues(b);
+  return bytesToB64(b);                  // 16 url-safe chars, ~96 bits
+}
+function newId(){
+  if (crypto.randomUUID) return crypto.randomUUID();
+  const b = new Uint8Array(16);
+  crypto.getRandomValues(b);
+  b[6] = (b[6] & 0x0f) | 0x40; b[8] = (b[8] & 0x3f) | 0x80;
+  const h = Array.from(b, x => x.toString(16).padStart(2,'0')).join('');
+  return h.slice(0,8)+'-'+h.slice(8,12)+'-'+h.slice(12,16)+'-'+h.slice(16,20)+'-'+h.slice(20);
+}
+const cloudReady = () => !!(SUPABASE_URL && SUPABASE_ANON_KEY && S.pair);
+
+async function rpc(fn, args){
+  const res = await fetch(SUPABASE_URL.replace(/\/+$/,'') + '/rest/v1/rpc/' + fn, {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: 'Bearer ' + SUPABASE_ANON_KEY
+    },
+    body: JSON.stringify(args)
+  });
+  if (!res.ok) throw new Error(fn + ' -> ' + res.status + ' ' + (await res.text()).slice(0,160));
+  const txt = await res.text();
+  return txt ? JSON.parse(txt) : null;
+}
+
+// Every cloud call is best-effort: the game must never stall or break because
+// the network is down. Failures are swallowed and the local copy stands in.
+async function cloudAddRound(r){
+  if (!cloudReady()) return;
+  try { await rpc('ph_add_round',
+    { p_id:r.id, p_pair:S.pair, p_artist:r.by, p_word:r.w, p_cat:r.cat || '', p_grid:r.g }); }
+  catch(e){ console.warn('[cloud] add failed', e.message); }
+}
+async function cloudFinishRound(id, guesser, state, tries){
+  if (!cloudReady()) return;
+  try { await rpc('ph_finish_round',
+    { p_id:id, p_pair:S.pair, p_guesser:guesser, p_state:state, p_tries:tries }); }
+  catch(e){ console.warn('[cloud] finish failed', e.message); }
+}
+async function cloudFetch(){
+  if (!cloudReady()) return null;
+  try { return await rpc('ph_get_rounds', { p_pair:S.pair, p_limit:120 }); }
+  catch(e){ console.warn('[cloud] fetch failed', e.message); return null; }
+}
+// server rows win on shared fields; anything drawn before pairing is kept
+function mergeRounds(rows){
+  const byId = new Map();
+  for (const g of S.gallery) if (g.id) byId.set(g.id, g);
+  for (const r of rows){
+    const prev = byId.get(r.id) || {};
+    byId.set(r.id, Object.assign(prev, {
+      id:r.id, g:r.grid, w:r.word, cat:r.cat, by:r.artist,
+      guesser:r.guesser, state:r.state, tries:r.tries,
+      at: Date.parse(r.created_at) || prev.at || Date.now()
+    }));
+  }
+  const local = S.gallery.filter(g => !g.id);
+  S.gallery = Array.from(byId.values()).concat(local)
+    .sort((a,b) => (b.at||0) - (a.at||0)).slice(0, 120);
   save();
 }
 
@@ -607,7 +778,7 @@ let grid = new Uint8Array(CELLS);
 let undoStack = [];
 let tool = 'pen';
 let color = 5;                 // start on the pink
-let round = null;              // { word, cat }
+let round = null;              // { word, cat, id }
 
 function buildPalette(){
   const pal = $('pal');
@@ -727,7 +898,7 @@ function renderPick(){
   });
 }
 function startDrawing(opt){
-  round = opt;
+  round = Object.assign({ id: newId() }, opt);
   grid = new Uint8Array(CELLS);
   undoStack = [];
   setTool('pen');
@@ -746,7 +917,9 @@ $('btn-done').addEventListener('click', () => {
   const used = grid.reduce((a, v) => a + (v ? 1 : 0), 0);
   if (used < 6) return toast('Draw a bit more first! ✏️');
 
-  const payload = { t:'d', a:S.me, w:round.word, c:round.cat, g:encodeGrid(grid) };
+  // pair code rides along so the other phone joins the profile on first open
+  const payload = { t:'d', a:S.me, w:round.word, c:round.cat, g:encodeGrid(grid),
+                    i:round.id, p:S.pair || undefined };
   sendLink = baseUrl() + '#' + encPayload(payload);
 
   paint($('cv-preview'), grid);
@@ -785,7 +958,10 @@ $('btn-test').addEventListener('click', () => {
 });
 $('btn-sent').addEventListener('click', () => {
   S.rounds++;
-  remember({ g:encodeGrid(grid), w:round.word, by:S.me || 'You', at:Date.now(), state:'sent' });
+  const entry = { id:round.id, g:encodeGrid(grid), w:round.word, cat:round.cat,
+                  by:S.me || 'You', at:Date.now(), state:'sent' };
+  remember(entry);
+  cloudAddRound(entry);
   save(); renderHome(); show('home');
   toast('Sent! Now go bug them 😄');
 });
@@ -876,6 +1052,11 @@ function revealAnimated(canvas, g){
 function openRound(p, isPreview){
   previewMode = !!isPreview;
   guessRound = p;
+  if (!previewMode && p.p && !S.pair){       // first link from them = auto-join
+    S.pair = p.p;
+    if (p.a && !S.them) S.them = p.a;
+    save();
+  }
   tries = 0; revealed = 0;
   const g = decodeGrid(p.g);
   revealAnimated($('cv-guess'), g);
@@ -926,8 +1107,17 @@ function finishGuess(solved, usedTries, lastGuess){
     S.rounds++;
     if (solved){ S.solved++; S.streak++; S.best = Math.max(S.best, S.streak); }
     else { S.streak = 0; }
-    remember({ g:p.g, w:p.w, by:p.a || 'Them', at:Date.now(), state: solved ? 'solved' : 'missed', tries:usedTries });
+    // someone can land here straight from a link having never named themselves
+    const meName = S.me || 'Guest';
+    const entry = { id:p.i, g:p.g, w:p.w, cat:p.c, by:p.a || 'Them', guesser:meName,
+                    at:Date.now(), state: solved ? 'solved' : 'missed', tries:usedTries };
+    remember(entry);
     save();
+    if (p.i){
+      // the artist may not have reached the server, so register then finish
+      cloudAddRound({ id:p.i, by:p.a || 'Them', w:p.w, cat:p.c, g:p.g })
+        .then(() => cloudFinishRound(p.i, meName, solved ? 'solved' : 'missed', usedTries));
+    }
   }
 
   paint($('cv-result'), decodeGrid(p.g));
@@ -947,7 +1137,8 @@ function finishGuess(solved, usedTries, lastGuess){
     const back = mkBtn('btn ghost', '← Back to sending', () => show('send'));
     acts.appendChild(back);
   } else {
-    const resPayload = { t:'r', a:S.me, o:p.a, w:p.w, c:p.c, g:p.g, s:solved ? 1 : 0, n:usedTries };
+    const resPayload = { t:'r', a:S.me, o:p.a, w:p.w, c:p.c, g:p.g,
+                         s:solved ? 1 : 0, n:usedTries, i:p.i, p:S.pair || undefined };
     const link = baseUrl() + '#' + encPayload(resPayload);
     acts.appendChild(mkBtn('btn purple', '📲 Tell ' + (p.a || 'them'), async () => {
       const text = solved
@@ -986,9 +1177,16 @@ function openResult(p){
     ? 'Guessed "' + p.w + '" in ' + p.n + (p.n === 1 ? ' try.' : ' tries.')
     : 'Your "' + p.w + '" was too cryptic 😄';
 
+  if (p.p && !S.pair){ S.pair = p.p; save(); }
+
   // mark my own sent drawing in the gallery with how it went
-  const hit = S.gallery.find(x => x.g === p.g && x.state === 'sent');
-  if (hit){ hit.state = solved ? 'solved' : 'missed'; hit.tries = p.n; }
+  const hit = p.i ? S.gallery.find(x => x.id === p.i)
+                  : S.gallery.find(x => x.g === p.g && x.state === 'sent');
+  if (hit){
+    hit.state = solved ? 'solved' : 'missed';
+    hit.tries = p.n;
+    hit.guesser = who;
+  }
   if (solved){ S.solved++; S.streak++; S.best = Math.max(S.best, S.streak); }
   else { S.streak = 0; }
   save();
@@ -1003,11 +1201,36 @@ function openResult(p){
 /* =========================================================
    gallery
    ========================================================= */
+async function refreshGallery(){
+  const bar = $('gal-sync');
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY){
+    bar.textContent = 'Local only — shared gallery not configured yet';
+    bar.className = 'syncbar warn';
+    return;
+  }
+  if (!S.pair){
+    bar.textContent = 'Local only — no shared profile yet';
+    bar.className = 'syncbar warn';
+    return;
+  }
+  bar.textContent = 'Syncing…';
+  bar.className = 'syncbar';
+  const rows = await cloudFetch();
+  if (rows){
+    mergeRounds(rows);
+    bar.textContent = 'Shared with ' + (S.them || 'them') + ' · ' + rows.length + ' round' + (rows.length === 1 ? '' : 's');
+    bar.className = 'syncbar ok';
+    renderGallery();
+  } else {
+    bar.textContent = 'Offline — showing what is on this phone';
+    bar.className = 'syncbar warn';
+  }
+}
 function renderGallery(){
   const wrap = $('gal-wrap');
   wrap.innerHTML = '';
   if (!S.gallery.length){
-    wrap.innerHTML = '<div class="empty-state"><div class="e">🖼</div><b>Nothing here yet</b><br><span class="hint">Every drawing you send or guess lands here.</span></div>';
+    wrap.innerHTML = '<div class="empty-state"><div class="e">🖼</div><b>Nothing here yet</b><br><span class="hint">Every drawing either of you sends or guesses lands here.</span></div>';
     return;
   }
   const gal = document.createElement('div');
@@ -1019,9 +1242,9 @@ function renderGallery(){
     c.width = N; c.height = N;
     const meta = document.createElement('div');
     meta.className = 'meta';
-    const label = item.state === 'solved' ? '✓ solved' + (item.tries ? ' · ' + item.tries : '')
+    const label = item.state === 'solved' ? '✓ solved' + (item.tries ? ' in ' + item.tries : '')
                 : item.state === 'missed' ? '✗ missed'
-                : '↗ sent';
+                : '↗ waiting';
     meta.innerHTML = '<div class="w px"></div><div class="s"></div>';
     d.appendChild(c); d.appendChild(meta);
     gal.appendChild(d);
@@ -1040,7 +1263,94 @@ function renderHome(){
   $('st-streak').textContent = S.streak;
   $('st-rounds').textContent = S.rounds;
   $('home-sub').textContent = (S.me || 'You') + ' & ' + (S.them || 'Them');
+  $('prof-names').textContent = (S.me || 'You') + ' & ' + (S.them || 'Them');
+  const st = $('prof-state');
+  if (S.pair){ st.textContent = 'Shared gallery on'; st.className = 'linked'; }
+  else { st.textContent = 'Gallery is this phone only'; st.className = ''; }
 }
+
+/* =========================================================
+   profile screen
+   ========================================================= */
+function inviteLink(){
+  return baseUrl() + '#' + encPayload({ t:'j', a:S.me, p:S.pair });
+}
+function renderProfile(){
+  $('pf-names').textContent = (S.me || 'You') + ' & ' + (S.them || 'Them');
+  $('pf-them').textContent = S.them || 'them';
+  const linked = !!S.pair;
+  $('pf-linked').style.display   = linked ? '' : 'none';
+  $('pf-unlinked').style.display = linked ? 'none' : '';
+  $('btn-unpair').style.display  = linked ? '' : 'none';
+  $('pf-code').textContent = S.pair || '—';
+  $('pf-note').textContent = linked
+    ? 'Every drawing either of you sends lands in one shared gallery.'
+    : 'Right now your gallery lives only on this phone.';
+  if (linked && !(SUPABASE_URL && SUPABASE_ANON_KEY)){
+    $('pf-note').textContent = 'Profile is set, but the shared store is not configured yet.';
+  }
+  show('profile');
+}
+$('btn-profile').addEventListener('click', renderProfile);
+$('btn-makepair').addEventListener('click', () => {
+  S.pair = newPairCode(); save();
+  renderHome(); renderProfile();
+  toast('Profile created 💞');
+});
+$('btn-joincode').addEventListener('click', () => {
+  const v = $('in-code').value.trim();
+  if (v.length < 12) return toast('That code looks too short');
+  S.pair = v; save();
+  $('in-code').value = '';
+  renderHome(); renderProfile();
+  toast('Joined 💞');
+});
+$('btn-copycode').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(S.pair); toast('Code copied 📋'); }
+  catch(e){ toast('Copy it from the box above'); }
+});
+$('btn-invite').addEventListener('click', async () => {
+  const url = inviteLink();
+  const text = (S.me || 'I') + ' started a Pixel Hearts profile with you 💞';
+  if (navigator.share){
+    try { await navigator.share({ title:'Pixel Hearts', text, url }); return; }
+    catch(e){ if (e && e.name === 'AbortError') return; }
+  }
+  try { await navigator.clipboard.writeText(url); toast('Invite link copied 📋'); }
+  catch(e){ toast('Could not copy — try again'); }
+});
+$('btn-unpair').addEventListener('click', () => {
+  S.pair = ''; save();
+  renderHome(); renderProfile();
+  toast('Left the shared profile');
+});
+
+/* ---------- joining from an invite link ---------- */
+let pendingJoin = null;
+function openJoin(p){
+  pendingJoin = p;
+  $('join-head').textContent = (p.a || 'Someone') + ' invited you';
+  $('join-note').textContent = 'Join and you two share one gallery — every drawing, '
+    + 'from either phone, in the same place.';
+  $('in-joinme').value = S.me || '';
+  show('join');
+}
+$('btn-acceptjoin').addEventListener('click', () => {
+  const me = $('in-joinme').value.trim();
+  if (!me) return toast('Your name first 💕');
+  if (!pendingJoin || !pendingJoin.p) return toast('That invite looks broken');
+  S.me = me;
+  S.them = pendingJoin.a || S.them;
+  S.pair = pendingJoin.p;
+  save(); pendingJoin = null;
+  renderHome(); show('home');
+  toast('Paired 💞 gallery is shared');
+});
+$('btn-declinejoin').addEventListener('click', () => {
+  pendingJoin = null;
+  renderHome();
+  show(S.me ? 'home' : 'setup');
+});
 $$('[data-back]').forEach(b => b.addEventListener('click', () => {
   const to = b.dataset.back;
   if (to === 'pick') renderPick();
@@ -1049,7 +1359,8 @@ $$('[data-back]').forEach(b => b.addEventListener('click', () => {
 }));
 $('btn-newdraw').addEventListener('click', () => { renderPick(); show('pick'); });
 $('btn-reroll').addEventListener('click', renderPick);
-$('btn-gallery').addEventListener('click', () => { renderGallery(); show('gallery'); });
+$('btn-gallery').addEventListener('click', () => { renderGallery(); show('gallery'); refreshGallery(); });
+$('btn-refresh').addEventListener('click', refreshGallery);
 $('btn-reshome').addEventListener('click', () => { renderHome(); show('home'); });
 $('btn-settings').addEventListener('click', () => {
   $('set-me').value = S.me; $('set-them').value = S.them;
@@ -1061,14 +1372,18 @@ $('btn-savenames').addEventListener('click', () => {
   save(); renderHome(); show('home'); toast('Saved ✓');
 });
 $('btn-reset').addEventListener('click', () => {
-  const me = S.me, them = S.them;
-  S = Object.assign({}, DEFAULTS, { me, them });
-  save(); renderHome(); show('home'); toast('Wiped clean');
+  // keep the pair code: leaving the shared profile is its own deliberate button,
+  // and dropping it here would strand the shared gallery with no way back.
+  const { me, them, pair } = S;
+  S = Object.assign({}, DEFAULTS, { me, them, pair });
+  save(); renderHome(); show('home'); toast('Wiped this phone clean');
 });
 $('btn-setup').addEventListener('click', () => {
   const me = $('in-me').value.trim(), them = $('in-them').value.trim();
   if (!me || !them) return toast('Both names please 💕');
-  S.me = me; S.them = them; save();
+  S.me = me; S.them = them;
+  if (!S.pair) S.pair = newPairCode();   // start a profile straight away
+  save();
   renderHome(); show('home');
 });
 $('btn-openlink').addEventListener('click', () => {
@@ -1086,7 +1401,13 @@ function route(hash){
   if (!hash) return false;
   let p;
   try { p = decPayload(hash); } catch(e){ return false; }
-  if (!p || !p.g || !p.w) return false;
+  if (!p) return false;
+  if (p.t === 'j'){                      // invite to share a profile
+    if (!p.p) return false;
+    openJoin(p);
+    return true;
+  }
+  if (!p.g || !p.w) return false;
   if (p.t === 'r') openResult(p);
   else openRound(p, false);
   return true;

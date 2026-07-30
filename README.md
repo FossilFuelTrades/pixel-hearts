@@ -27,7 +27,46 @@ alternating) is **581**. Both fit in an iMessage with room to spare.
 The XOR scramble is an anti-spoiler measure, not security — it stops the answer
 from showing up if someone idly base64-decodes the link or a preview unfurls it.
 
-Scores, streak and the drawing gallery live in `localStorage`, per device.
+Scores and streak live in `localStorage`, per device. The gallery is shared —
+see below.
+
+## Shared gallery (the profile)
+
+Two phones holding the same **pair code** see one gallery. The code is 16
+random url-safe characters generated on-device; the invite link carries it so
+the other phone joins on first open, and any game link doubles as an invite.
+
+Rounds sync through Supabase. The client never touches the table directly:
+
+| function | who calls it | what it does |
+|---|---|---|
+| `ph_add_round` | artist on send, guesser on open | registers the round (idempotent) |
+| `ph_finish_round` | guesser on result | writes outcome, tries, guesser |
+| `ph_get_rounds` | gallery screen | returns that pair's rounds |
+
+The table has RLS on with **zero policies** and permissions revoked, so the
+public anon key grants nothing by itself. Every function requires the pair
+code and refuses anything under 12 characters. Wrong code returns nothing and
+writes nothing — verified.
+
+Every cloud call is best-effort and wrapped: with no network, or with the keys
+left blank, the game plays exactly as before and the gallery falls back to
+whatever is on that phone.
+
+### Setting it up
+
+1. Create a free project at supabase.com
+2. SQL Editor → paste `supabase/schema.sql` → Run
+3. Settings → API → copy the **Project URL** and the **anon public** key
+4. Put them in `index.html`:
+
+```js
+const SUPABASE_URL      = 'https://xxxxxxxx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGci...';
+```
+
+Both are safe to commit — that is what the anon key is for, and the schema is
+built on the assumption it is public.
 
 ## Running it
 
