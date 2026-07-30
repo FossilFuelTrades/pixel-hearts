@@ -1262,11 +1262,18 @@ function renderHome(){
   $('st-solved').textContent = S.solved;
   $('st-streak').textContent = S.streak;
   $('st-rounds').textContent = S.rounds;
-  $('home-sub').textContent = (S.me || 'You') + ' & ' + (S.them || 'Them');
-  $('prof-names').textContent = (S.me || 'You') + ' & ' + (S.them || 'Them');
+  // only claim a pair when there actually is one, otherwise this reads as
+  // though you are still linked to someone you just left
+  $('home-sub').textContent = pairLabel();
+  $('prof-names').textContent = pairLabel();
+  $('profile-card').querySelector('.pair').textContent = S.pair ? '💞' : '👤';
   const st = $('prof-state');
   if (S.pair){ st.textContent = 'Shared gallery on'; st.className = 'linked'; }
   else { st.textContent = 'Gallery is this phone only'; st.className = ''; }
+}
+function pairLabel(){
+  const me = S.me || 'You';
+  return S.pair ? me + ' & ' + (S.them || 'Them') : me;
 }
 
 /* =========================================================
@@ -1276,7 +1283,7 @@ function inviteLink(){
   return baseUrl() + '#' + encPayload({ t:'j', a:S.me, p:S.pair });
 }
 function renderProfile(){
-  $('pf-names').textContent = (S.me || 'You') + ' & ' + (S.them || 'Them');
+  $('pf-names').textContent = pairLabel();
   $('pf-them').textContent = S.them || 'them';
   const linked = !!S.pair;
   $('pf-linked').style.display   = linked ? '' : 'none';
@@ -1319,7 +1326,21 @@ $('btn-invite').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(url); toast('Invite link copied 📋'); }
   catch(e){ toast('Could not copy — try again'); }
 });
+// two-tap, because the pair code is the only key to the shared gallery and a
+// stray tap would otherwise throw it away with nothing to recover from
+let unpairArmed = null;
 $('btn-unpair').addEventListener('click', () => {
+  const b = $('btn-unpair');
+  if (!unpairArmed){
+    b.textContent = '⚠️ Tap again — copy your code first';
+    unpairArmed = setTimeout(() => {
+      unpairArmed = null;
+      b.textContent = 'Leave shared profile';
+    }, 5000);
+    return;
+  }
+  clearTimeout(unpairArmed); unpairArmed = null;
+  b.textContent = 'Leave shared profile';
   S.pair = ''; save();
   renderHome(); renderProfile();
   toast('Left the shared profile');
